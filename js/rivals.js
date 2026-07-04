@@ -4,6 +4,9 @@
 // placeholder con el color/símbolo del palo en lugar de una foto.
 // "basePrize" es el premio base (antes de multiplicador) al derrotarlo,
 // en escalera según la dificultad del rival.
+// "rivalSkill" es el handicap (0..1): probabilidad de que el rival, al
+// repartirse su mano, mire dos candidatas y se quede con la mejor. A mayor
+// skill, con más frecuencia juega la mejor mano, así que es más difícil.
 const RIVALS = [
   {
     id: 'little-fizz',
@@ -15,7 +18,7 @@ const RIVALS = [
     introLine: 'I swear I had a feeling...',
     defeatLine: 'Vale... quizá soy más fish que pro.',
     lives: 1,
-    modifier: 0,
+    rivalSkill: 0,
     basePrize: 15000
   },
   {
@@ -28,7 +31,7 @@ const RIVALS = [
     introLine: 'Cuando me hincho, mejor foldear.',
     defeatLine: 'Se me ha pinchado el farol...',
     lives: 2,
-    modifier: 0.03,
+    rivalSkill: 0.15,
     basePrize: 25000
   },
   {
@@ -41,7 +44,7 @@ const RIVALS = [
     introLine: 'Ocho manos, un solo tell. Intenta encontrarlo.',
     defeatLine: 'Ocho manos... y ninguna salvación.',
     lives: 3,
-    modifier: 0.05,
+    rivalSkill: 0.30,
     basePrize: 42500
   },
   {
@@ -54,7 +57,7 @@ const RIVALS = [
     introLine: 'Yo no persigo manos. Cazo rivers.',
     defeatLine: 'El river hoy no tenía dientes.',
     lives: 3,
-    modifier: 0.07,
+    rivalSkill: 0.45,
     basePrize: 63000
   },
   {
@@ -67,7 +70,7 @@ const RIVALS = [
     introLine: 'No rompo corazones, rompo tus odds.',
     defeatLine: 'Me has roto el corazón... y el stack.',
     lives: 4,
-    modifier: 0.10,
+    rivalSkill: 0.60,
     basePrize: 78500
   },
   {
@@ -80,7 +83,7 @@ const RIVALS = [
     introLine: 'Bienvenido a mi mesa, aquí hasta los ases sudan.',
     defeatLine: 'La última mano era tuya. Hoy la mesa te pertenece.',
     lives: 5,
-    modifier: 0.12,
+    rivalSkill: 0.80,
     // No se especificó premio base para El Pirulas en el encargo (solo del 1 al 5).
     // Se deja en 100.000 EUR como cierre de escalera; ajustar si se quiere otro valor.
     basePrize: 100000,

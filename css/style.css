@@ -188,17 +188,43 @@ h2 {
 /* --- Portraits --- */
 
 .portrait {
+  position: relative;
+  overflow: hidden;
   width: 100%;
   border-radius: 10px;
-  background-color: #1f1c26;
-  background-size: contain;
-  background-repeat: no-repeat;
+  background-color: #0d0c10;
+  background-size: cover;
   background-position: center center;
   display: flex;
   align-items: center;
   justify-content: center;
   color: rgba(255, 255, 255, 0.85);
   margin-bottom: 12px;
+}
+
+/* Relleno difuminado: copia ampliada y borrosa de la imagen que tapa las
+   franjas del "contain" con el propio color del arte. */
+.portrait-blur {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(22px) brightness(0.5);
+  transform: scale(1.2);
+}
+
+.portrait-img {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.portrait-symbol {
+  position: relative;
+  z-index: 1;
 }
 
 .portrait-large {

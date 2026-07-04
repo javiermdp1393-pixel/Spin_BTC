@@ -120,14 +120,19 @@ function renderLivesHearts(lives, maxLives) {
 }
 
 function setPortraitElement(el, rival) {
-  el.className = el.className.replace(/placeholder-\S+/g, '').trim();
+  el.className = el.className.replace(/\s*placeholder-\S+/g, '').replace(/\s*is-placeholder/g, '').trim();
+  el.style.backgroundImage = '';
+
   if (rival.image) {
-    el.style.backgroundImage = `url('${rival.image}')`;
-    el.textContent = '';
+    // El retrato se muestra completo (contain) sobre una copia difuminada de
+    // la propia imagen, así el hueco alrededor no muestra un color que
+    // desentone con el fondo del arte de cada personaje.
+    el.innerHTML =
+      `<div class="portrait-blur" style="background-image:url('${rival.image}')"></div>` +
+      `<img class="portrait-img" src="${rival.image}" alt="${rival.name}">`;
   } else {
-    el.style.backgroundImage = '';
-    el.classList.add(`placeholder-${rival.suit}`);
-    el.textContent = rival.suitSymbol;
+    el.classList.add('is-placeholder', `placeholder-${rival.suit}`);
+    el.innerHTML = `<span class="portrait-symbol">${rival.suitSymbol}</span>`;
   }
 }
 
@@ -169,8 +174,8 @@ function renderRivalIntro() {
   document.getElementById('rival-intro-lives').textContent = `Vidas del rival: ${rival.lives}`;
 
   const modifierEl = document.getElementById('rival-intro-modifier');
-  if (rival.modifier > 0) {
-    modifierEl.textContent = `Penalización de dificultad: -${Math.round(rival.modifier * 100)}% a tus probabilidades.`;
+  if (rival.rivalSkill > 0) {
+    modifierEl.textContent = `Ventaja del rival: mejora su mano en el ${Math.round(rival.rivalSkill * 100)}% de las manos.`;
   } else {
     modifierEl.textContent = '';
   }
@@ -205,9 +210,10 @@ function renderBattle() {
   renderCardRow('battle-community-cards', hand.communityCards);
 
   const winPercent = Math.round(hand.winChance * 100);
+  const detailText = getOddsDetailText(hand.winChance, hand.playerHandName, rival.rivalSkill);
   document.getElementById('battle-odds-label').textContent = `${hand.oddsLabel} · ${winPercent}%`;
-  document.getElementById('battle-odds-label').title = getOddsDetailText(hand.baseWinChance, rival.modifier);
-  document.getElementById('battle-odds-detail').textContent = getOddsDetailText(hand.baseWinChance, rival.modifier);
+  document.getElementById('battle-odds-label').title = detailText;
+  document.getElementById('battle-odds-detail').textContent = detailText;
   document.getElementById('battle-odds-detail').classList.add('hidden');
   document.getElementById('battle-result-message').textContent = '';
 
@@ -239,30 +245,35 @@ function showBattleResult(result) {
     document.getElementById('battle-result-message').textContent = result.label;
   }
 
-  // Cuando se resuelve un push, se enseñan (solo a nivel narrativo) 2 cartas
-  // de rival coherentes con el resultado, en vez de dejar las boca abajo.
+  // Tras un push se muestran las cartas reales del rival y qué combinación
+  // ganó, para que el resultado sea legible como una mano de póker.
   if (result.revealCards) {
     renderCardRow('battle-rival-cards', result.revealCards);
-    const rival = getCurrentRival(gameState);
-    let captionText;
-    if (result.playerWon) {
-      captionText = result.revealMatched ? `${rival.name} se guardaba una mano perdedora.` : `${rival.name} enseña sus cartas.`;
-    } else {
-      captionText = result.revealMatched ? `La mano que te ha ganado ${rival.name}.` : `${rival.name} enseña sus cartas.`;
-    }
-    document.getElementById('battle-reveal-caption').textContent = captionText;
+    document.getElementById('battle-reveal-caption').textContent = buildComboCaption(result);
   }
 
   document.getElementById('push-button').classList.add('hidden');
   document.getElementById('fold-button').classList.add('hidden');
 
-  if (gameState.status === 'BATTLE') {
-    // Sigue el mismo enfrentamiento: se reparte mano nueva al continuar.
-    document.getElementById('continue-button').classList.remove('hidden');
-  } else {
-    // El enfrentamiento terminó (REWARD o BUST_OUT): avanzar tras una pausa breve.
-    setTimeout(() => goToNextScreenAfterBattle(), 1600);
+  // El juego nunca avanza solo: siempre espera a que el jugador pulse
+  // Continuar, tanto si sigue el combate como si terminó (recompensa/bust).
+  document.getElementById('continue-button').classList.remove('hidden');
+}
+
+// Frase que explica qué combinación decidió la mano.
+function buildComboCaption(result) {
+  const rival = getCurrentRival(gameState);
+
+  if (result.outcome === 'WIN') {
+    return `Ganas con ${result.playerHandName}. ${rival.name} tenía ${result.rivalHandName}.`;
   }
+  if (result.outcome === 'LOSE') {
+    return `${rival.name} gana con ${result.rivalHandName}. Tú tenías ${result.playerHandName}.`;
+  }
+  if (result.outcome === 'TIE') {
+    return `Empate: ${result.playerHandName} en ambos. Se reparte de nuevo.`;
+  }
+  return '';
 }
 
 document.getElementById('push-button').addEventListener('click', () => {
@@ -276,17 +287,17 @@ document.getElementById('fold-button').addEventListener('click', () => {
 });
 
 document.getElementById('continue-button').addEventListener('click', () => {
-  renderBattle();
-});
-
-function goToNextScreenAfterBattle() {
-  if (gameState.status === 'REWARD') {
+  if (gameState.status === 'BATTLE') {
+    // Sigue el mismo enfrentamiento: mostrar la mano nueva ya repartida.
+    renderBattle();
+  } else if (gameState.status === 'REWARD') {
     renderReward();
+    showScreen('REWARD');
   } else if (gameState.status === 'BUST_OUT') {
     renderBustOut();
+    showScreen('BUST_OUT');
   }
-  showScreen(gameState.status);
-}
+});
 
 // --- Pantalla: Recompensa ---
 

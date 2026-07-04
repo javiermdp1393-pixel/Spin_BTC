@@ -1,22 +1,12 @@
-// Odds simplificadas. Encapsulado a propósito para poder sustituir esta
-// aproximación por un cálculo real de equity (combinaciones de mano rival)
-// en una futura iteración sin tocar el resto del juego.
-
-// winChance base según categoría de mano (0 = High Card ... 8 = Straight Flush).
-const BASE_WIN_CHANCE_BY_CATEGORY = [0.30, 0.42, 0.55, 0.65, 0.72, 0.78, 0.85, 0.92, 0.97];
+// Odds simplificadas. La probabilidad numérica ahora la calcula poker.js por
+// Monte Carlo (estimateWinChance); aquí solo la traducimos a la lectura
+// cualitativa y al texto de detalle para la UI.
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
-// Combina la fuerza de la mano del jugador con el modificador oculto del
-// rival para obtener la probabilidad final de ganar el push.
-function getFinalWinChance(handCategory, rivalModifier) {
-  const baseWinChance = BASE_WIN_CHANCE_BY_CATEGORY[handCategory];
-  return clamp(baseWinChance - rivalModifier, 0.10, 0.90);
-}
-
-// Traduce el winChance interno a una etiqueta cualitativa para la UI.
+// Traduce el winChance interno (0..1) a una etiqueta cualitativa.
 function getOddsLabel(winChance) {
   if (winChance < 0.30) return 'Dead Hand';
   if (winChance < 0.45) return 'Risky Call';
@@ -26,14 +16,12 @@ function getOddsLabel(winChance) {
   return 'Monster Hand';
 }
 
-// Texto de detalle (tooltip/desplegable) con el desglose de la probabilidad:
-// fuerza de la mano del jugador menos la penalización oculta del rival.
-function getOddsDetailText(baseWinChance, rivalModifier) {
-  const basePct = Math.round(baseWinChance * 100);
-  if (rivalModifier <= 0) {
-    return `Fuerza de tu mano: ${basePct}%.`;
+// Texto de detalle (tooltip / desplegable) con la mano actual del jugador,
+// la probabilidad estimada y, si procede, el handicap del rival.
+function getOddsDetailText(winChance, playerHandName, rivalSkill) {
+  let text = `Tu mejor mano ahora: ${playerHandName}. Probabilidad estimada de ganar: ${Math.round(winChance * 100)}%.`;
+  if (rivalSkill > 0) {
+    text += ` El rival mejora su mano el ${Math.round(rivalSkill * 100)}% de las veces.`;
   }
-  const modifierPct = Math.round(rivalModifier * 100);
-  const finalPct = Math.round(clamp(baseWinChance - rivalModifier, 0.10, 0.90) * 100);
-  return `Fuerza de tu mano: ${basePct}% − Penalización del rival: ${modifierPct}% = ${finalPct}%.`;
+  return text;
 }
