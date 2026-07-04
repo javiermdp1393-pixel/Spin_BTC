@@ -97,14 +97,33 @@ function renderHiddenCardRow(containerId, count) {
   for (let i = 0; i < count; i++) container.appendChild(createCardBackElement());
 }
 
-// Da formato a un número de vidas que solo puede tener fracciones de 1/3
-// (0, 1/3 o 2/3), mostrando "2⅓" en vez de "2.3333333333333335".
+// Da formato a un número de vidas que solo puede tener fracciones de 1/4
+// (0, 1/4, 1/2 o 3/4), mostrando "2¾" en vez de "2.75".
 function formatLifeNumber(lives) {
-  const rounded = Math.round(lives * 3) / 3;
+  const rounded = Math.round(lives * 4) / 4;
   const whole = Math.floor(rounded + 1e-9);
-  const thirds = Math.round((rounded - whole) * 3);
-  const fractionSymbol = thirds === 1 ? '⅓' : thirds === 2 ? '⅔' : '';
+  const quarters = Math.round((rounded - whole) * 4);
+  const fractionSymbol = quarters === 1 ? '¼' : quarters === 2 ? '½' : quarters === 3 ? '¾' : '';
   return `${whole}${fractionSymbol}`;
+}
+
+// Heart shape en SVG rellenado con un gradiente "de batería": la parte
+// roja ocupa exactamente el % indicado y siempre queda dentro del
+// contorno del corazón (a diferencia de recortar un glifo de texto, que
+// no se ajusta bien a la silueta real).
+let heartGradientCounter = 0;
+const HEART_SVG_PATH = 'M16 29.3C16 29.3 1.6 20.1 1.6 10 1.6 4.9 5.6 1.6 10 1.6 12.8 1.6 15.2 3.3 16 6 16.8 3.3 19.2 1.6 22 1.6 26.4 1.6 30.4 4.9 30.4 10 30.4 20.1 16 29.3 16 29.3Z';
+
+function renderHeart(fillPercent) {
+  heartGradientCounter += 1;
+  const gradientId = `heart-grad-${heartGradientCounter}`;
+  return `<svg class="heart-svg" viewBox="0 0 32 31" width="18" height="17">
+    <defs><linearGradient id="${gradientId}">
+      <stop offset="${fillPercent}%" stop-color="#ff3b53" />
+      <stop offset="${fillPercent}%" stop-color="#4a4650" />
+    </linearGradient></defs>
+    <path d="${HEART_SVG_PATH}" fill="url(#${gradientId})" />
+  </svg>`;
 }
 
 // Construye una fila de corazones donde cada uno se rellena por porcentaje,
@@ -113,8 +132,7 @@ function renderLivesHearts(lives, maxLives) {
   let html = '';
   for (let i = 0; i < maxLives; i++) {
     const remaining = clamp(lives - i, 0, 1);
-    const fillPercent = Math.round(remaining * 100);
-    html += `<span class="heart"><span class="heart-fill" style="width:${fillPercent}%"></span></span>`;
+    html += renderHeart(Math.round(remaining * 100));
   }
   return `<span class="hearts">${html}</span> <span class="lives-number">${formatLifeNumber(lives)}</span>`;
 }

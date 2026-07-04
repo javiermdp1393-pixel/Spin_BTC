@@ -291,9 +291,9 @@ h2 {
 .card-row {
   display: flex;
   justify-content: center;
-  gap: 8px;
+  gap: 7px;
   flex-wrap: wrap;
-  min-height: 88px;
+  min-height: 102px;
 }
 
 .reveal-caption {
@@ -308,8 +308,8 @@ h2 {
 
 .card {
   position: relative;
-  width: 58px;
-  height: 84px;
+  width: 66px;
+  height: 98px;
   background: linear-gradient(180deg, #fffdf7, #f3ecda);
   border: 1px solid #d8cfb4;
   border-radius: 7px;
@@ -326,39 +326,42 @@ h2 {
 
 .card-corner {
   position: absolute;
-  top: 4px;
-  left: 4px;
-  font-size: 0.62rem;
+  top: 3px;
+  left: 3px;
+  font-size: 0.58rem;
   font-weight: bold;
   line-height: 1.05;
   text-align: center;
+  z-index: 1;
 }
 
 .card-corner.corner-bottom {
   top: auto;
   left: auto;
-  bottom: 4px;
-  right: 4px;
+  bottom: 3px;
+  right: 3px;
   transform: rotate(180deg);
 }
 
 .card-center {
   position: absolute;
   inset: 0;
-  padding: 15px 5px 5px;
+  padding: 17px 4px 4px;
 }
 
 .card-center.center-pips {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(5, 1fr);
+  height: 100%;
 }
 
 .card-center .pip {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.78rem;
+  font-size: 0.62rem;
+  line-height: 1;
 }
 
 .card-center.center-ace {
@@ -435,33 +438,14 @@ h2 {
 
 .hearts {
   display: inline-flex;
-  gap: 2px;
+  align-items: center;
+  gap: 3px;
   vertical-align: middle;
 }
 
-.heart {
-  position: relative;
-  display: inline-block;
-  width: 1.1em;
-  font-size: 1.3rem;
-  color: #4a4650;
-}
-
-.heart::before {
-  content: '♥';
-}
-
-.heart-fill {
-  position: absolute;
-  left: 0;
-  top: 0;
-  overflow: hidden;
-  color: #ff3b53;
-  white-space: nowrap;
-}
-
-.heart-fill::before {
-  content: '♥';
+.heart-svg {
+  display: block;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
 }
 
 .lives-number {

@@ -2,7 +2,7 @@
 // No toca el DOM: eso es responsabilidad de main.js.
 
 const PLAYER_STARTING_LIVES = 3;
-const FOLD_LIFE_COST = 1 / 3;
+const FOLD_LIFE_COST = 1 / 4;
 
 function createInitialState() {
   return {
@@ -20,10 +20,10 @@ function getCurrentRival(state) {
   return RIVALS[state.currentRivalIndex];
 }
 
-// Las vidas se mueven en fracciones de 1/3 (fold) o 1 (mano perdida).
-// Redondear a la sexta parte evita arrastrar errores de punto flotante.
+// Las vidas se mueven en fracciones de 1/4 (fold) o 1 (mano perdida).
+// Redondear al cuarto evita arrastrar errores de punto flotante.
 function roundLife(value) {
-  return Math.round(value * 6) / 6;
+  return Math.round(value * 4) / 4;
 }
 
 // Prepara un nuevo enfrentamiento: resetea vidas del jugador a 3 y carga
