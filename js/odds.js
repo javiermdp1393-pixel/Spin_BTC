@@ -16,8 +16,7 @@ function getFinalWinChance(handCategory, rivalModifier) {
   return clamp(baseWinChance - rivalModifier, 0.10, 0.90);
 }
 
-// Traduce el winChance interno a una etiqueta cualitativa para la UI,
-// sin revelar nunca el porcentaje exacto al jugador.
+// Traduce el winChance interno a una etiqueta cualitativa para la UI.
 function getOddsLabel(winChance) {
   if (winChance < 0.30) return 'Dead Hand';
   if (winChance < 0.45) return 'Risky Call';
@@ -25,4 +24,16 @@ function getOddsLabel(winChance) {
   if (winChance < 0.70) return 'Playable Spot';
   if (winChance < 0.85) return 'Strong Spot';
   return 'Monster Hand';
+}
+
+// Texto de detalle (tooltip/desplegable) con el desglose de la probabilidad:
+// fuerza de la mano del jugador menos la penalización oculta del rival.
+function getOddsDetailText(baseWinChance, rivalModifier) {
+  const basePct = Math.round(baseWinChance * 100);
+  if (rivalModifier <= 0) {
+    return `Fuerza de tu mano: ${basePct}%.`;
+  }
+  const modifierPct = Math.round(rivalModifier * 100);
+  const finalPct = Math.round(clamp(baseWinChance - rivalModifier, 0.10, 0.90) * 100);
+  return `Fuerza de tu mano: ${basePct}% − Penalización del rival: ${modifierPct}% = ${finalPct}%.`;
 }

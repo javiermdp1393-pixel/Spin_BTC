@@ -11,6 +11,12 @@ html, body {
   font-family: 'Georgia', 'Times New Roman', serif;
 }
 
+h2 {
+  font-family: 'Arial Black', 'Arial', 'Helvetica Neue', sans-serif;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
 .screen {
   display: none;
   min-height: 100vh;
@@ -25,7 +31,7 @@ html, body {
 }
 
 .btn {
-  font-family: inherit;
+  font-family: 'Arial', 'Helvetica Neue', sans-serif;
   font-size: 1.05rem;
   padding: 14px 32px;
   border-radius: 6px;
@@ -37,6 +43,11 @@ html, body {
 
 .btn:active {
   transform: scale(0.97);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 .btn-primary {
@@ -67,8 +78,17 @@ html, body {
   position: absolute;
   inset: 0;
   background-size: cover;
-  background-position: center 15%;
-  filter: brightness(0.55);
+  background-position: center 22%;
+  filter: brightness(0.5);
+}
+
+.hero-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /* Atenúa el logo y la cara de fondo de la foto para que no compitan
+     visualmente con el logo nítido y el texto que van encima. */
+  background: linear-gradient(180deg, rgba(6, 5, 8, 0.88) 0%, rgba(6, 5, 8, 0.55) 38%, rgba(6, 5, 8, 0.75) 75%, rgba(6, 5, 8, 0.92) 100%);
 }
 
 .hero-overlay {
@@ -78,17 +98,17 @@ html, body {
   padding: 24px;
 }
 
-.title {
-  font-size: 2.6rem;
-  letter-spacing: 2px;
-  color: #f4d976;
-  text-shadow: 0 4px 18px rgba(0, 0, 0, 0.8);
+.logo-image {
+  max-width: 340px;
+  width: 80vw;
+  height: auto;
+  filter: drop-shadow(0 4px 18px rgba(0, 0, 0, 0.8));
   margin-bottom: 12px;
 }
 
 .tagline {
   color: #e8dcc0;
-  max-width: 420px;
+  max-width: 440px;
   margin: 0 auto 20px;
 }
 
@@ -122,6 +142,18 @@ html, body {
   font-size: 1rem;
 }
 
+.rules-summary {
+  text-align: left;
+  color: #a79c86;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  background: #0e0d12;
+  border: 1px solid #2a2731;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-top: 16px;
+}
+
 .error-text {
   color: #ff6b6b;
   min-height: 1.2em;
@@ -141,6 +173,12 @@ html, body {
   color: #cfc4a8;
 }
 
+.modifier-text {
+  color: #ff8a65;
+  font-size: 0.9rem;
+  min-height: 1.2em;
+}
+
 .quote {
   font-style: italic;
   color: #e8dcc0;
@@ -153,8 +191,9 @@ html, body {
   width: 100%;
   border-radius: 10px;
   background-color: #1f1c26;
-  background-size: cover;
-  background-position: center top;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center center;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -163,13 +202,13 @@ html, body {
 }
 
 .portrait-large {
-  height: 260px;
+  height: 320px;
   font-size: 5rem;
 }
 
 .portrait-small {
-  height: 100px;
-  width: 100px;
+  height: 110px;
+  width: 110px;
   font-size: 2.4rem;
   margin-bottom: 6px;
 }
@@ -185,14 +224,14 @@ html, body {
   max-width: 640px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
 }
 
 .rival-zone, .player-zone {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .zone-info {
@@ -228,20 +267,26 @@ html, body {
   justify-content: center;
   gap: 8px;
   flex-wrap: wrap;
-  min-height: 84px;
+  min-height: 88px;
 }
 
+.reveal-caption {
+  font-style: italic;
+  color: #a79c86;
+  font-size: 0.85rem;
+  min-height: 1.1em;
+  margin: 2px 0 0;
+}
+
+/* --- Naipes con aspecto de baraja física --- */
+
 .card {
-  width: 54px;
-  height: 76px;
-  background: #f5efe0;
-  border-radius: 6px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  font-size: 1.1rem;
+  position: relative;
+  width: 58px;
+  height: 84px;
+  background: linear-gradient(180deg, #fffdf7, #f3ecda);
+  border: 1px solid #d8cfb4;
+  border-radius: 7px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
 }
 
@@ -253,10 +298,74 @@ html, body {
   color: #1a1a1a;
 }
 
+.card-corner {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  font-size: 0.62rem;
+  font-weight: bold;
+  line-height: 1.05;
+  text-align: center;
+}
+
+.card-corner.corner-bottom {
+  top: auto;
+  left: auto;
+  bottom: 4px;
+  right: 4px;
+  transform: rotate(180deg);
+}
+
+.card-center {
+  position: absolute;
+  inset: 0;
+  padding: 15px 5px 5px;
+}
+
+.card-center.center-pips {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+}
+
+.card-center .pip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+}
+
+.card-center.center-ace {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.7rem;
+}
+
+.card-center.center-face {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.card-center.center-face .face-letter {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.card-center.center-face .face-suit {
+  font-size: 0.85rem;
+}
+
 .card-back {
   background: repeating-linear-gradient(45deg, #6a1622, #6a1622 6px, #4d0f19 6px, #4d0f19 12px);
   color: #d4af37;
   font-size: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .odds-label {
@@ -269,6 +378,15 @@ html, body {
   margin-top: 10px;
   font-weight: bold;
   letter-spacing: 1px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.odds-detail {
+  color: #cfc4a8;
+  font-size: 0.85rem;
+  margin-top: 6px;
+  max-width: 320px;
 }
 
 .result-message {
@@ -276,7 +394,11 @@ html, body {
   font-weight: bold;
   font-size: 1.15rem;
   color: #f4d976;
-  margin-top: 8px;
+  margin-top: 4px;
+}
+
+#battle-rival-result-message {
+  color: #ff6b6b;
 }
 
 .battle-actions {
@@ -303,18 +425,17 @@ html, body {
   content: '♥';
 }
 
-.heart.full {
-  color: #ff3b53;
-}
-
-.heart.half::after {
-  content: '♥';
+.heart-fill {
   position: absolute;
   left: 0;
   top: 0;
-  width: 50%;
   overflow: hidden;
   color: #ff3b53;
+  white-space: nowrap;
+}
+
+.heart-fill::before {
+  content: '♥';
 }
 
 .lives-number {
@@ -354,6 +475,22 @@ html, body {
   color: #ff3b53;
   text-shadow: 0 0 12px rgba(255, 59, 83, 0.8);
   animation: pulse 0.6s infinite alternate;
+}
+
+.reward-reel {
+  background: #0e0d12;
+  border: 2px solid #d4af37;
+  border-radius: 10px;
+  padding: 18px;
+  margin: 16px 0;
+}
+
+.reward-reel span {
+  font-family: 'Arial Black', 'Arial', sans-serif;
+  font-size: 2.2rem;
+  font-weight: bold;
+  color: #f4d976;
+  letter-spacing: 2px;
 }
 
 @keyframes pulse {

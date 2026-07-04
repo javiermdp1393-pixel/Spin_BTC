@@ -95,3 +95,32 @@ function evaluateHandCategory(playerCards, communityCards) {
   if (counts[0] === 2) return 1;
   return 0;
 }
+
+function cardsEqual(a, b) {
+  return a.rank === b.rank && a.suit === b.suit;
+}
+
+function getRemainingDeck(usedCards) {
+  return createDeck().filter((card) => !usedCards.some((used) => cardsEqual(used, card)));
+}
+
+// Busca 2 cartas de rival "plausibles" para mostrar como flavor tras resolver
+// un push: si el jugador ganó, una mano que habría perdido; si perdió, una
+// mano que le habría ganado. No es la mano real del rival (nunca existió),
+// es solo una reconstrucción narrativa coherente con el resultado.
+// Devuelve { cards, matched }: matched indica si se encontró una combinación
+// que realmente cumple la condición (si no, cards es un par al azar).
+function pickRevealRivalCards(playerCards, communityCards, playerCategory, wantWeakerThanPlayer) {
+  const used = [...playerCards, ...communityCards];
+  const remaining = shuffleDeck(getRemainingDeck(used));
+  const maxPairsToCheck = 20;
+
+  for (let i = 0; i < maxPairsToCheck && i * 2 + 1 < remaining.length; i++) {
+    const candidate = [remaining[i * 2], remaining[i * 2 + 1]];
+    const category = evaluateHandCategory(candidate, communityCards);
+    if (wantWeakerThanPlayer && category < playerCategory) return { cards: candidate, matched: true };
+    if (!wantWeakerThanPlayer && category > playerCategory) return { cards: candidate, matched: true };
+  }
+
+  return { cards: [remaining[0], remaining[1]], matched: false };
+}

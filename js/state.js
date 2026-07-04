@@ -2,7 +2,7 @@
 // No toca el DOM: eso es responsabilidad de main.js.
 
 const PLAYER_STARTING_LIVES = 3;
-const BASE_PRIZE = 100000;
+const FOLD_LIFE_COST = 1 / 3;
 
 function createInitialState() {
   return {
@@ -12,13 +12,18 @@ function createInitialState() {
     playerLives: PLAYER_STARTING_LIVES,
     rivalLives: 0,
     totalPrize: 0,
-    currentHand: null, // { playerCards, communityCards, handCategory, winChance, oddsLabel }
-    lastResult: null // texto del último evento (para mostrar en el battle screen)
+    currentHand: null // { playerCards, communityCards, handCategory, baseWinChance, winChance, oddsLabel }
   };
 }
 
 function getCurrentRival(state) {
   return RIVALS[state.currentRivalIndex];
+}
+
+// Las vidas se mueven en fracciones de 1/3 (fold) o 1 (push). Redondear a la
+// sexta parte evita arrastrar errores de punto flotante (p.ej. 1.9999999997).
+function roundLife(value) {
+  return Math.round(value * 6) / 6;
 }
 
 // Prepara un nuevo enfrentamiento: resetea vidas del jugador a 3 y carga
@@ -27,7 +32,6 @@ function startRivalEncounter(state) {
   const rival = getCurrentRival(state);
   state.playerLives = PLAYER_STARTING_LIVES;
   state.rivalLives = rival.lives;
-  state.lastResult = null;
   dealNewHandForState(state);
 }
 
@@ -36,58 +40,62 @@ function dealNewHandForState(state) {
   const rival = getCurrentRival(state);
   const hand = dealHand();
   const handCategory = evaluateHandCategory(hand.playerCards, hand.communityCards);
+  const baseWinChance = BASE_WIN_CHANCE_BY_CATEGORY[handCategory];
   const winChance = getFinalWinChance(handCategory, rival.modifier);
 
   state.currentHand = {
     playerCards: hand.playerCards,
     communityCards: hand.communityCards,
     handCategory,
+    baseWinChance,
     winChance,
     oddsLabel: getOddsLabel(winChance)
   };
 }
 
-// Devuelve el resultado de foldear: resta 0,5 vidas y reparte mano nueva
-// si el jugador sigue vivo.
+// Resta el coste del fold (1/3 de vida) y reparte mano nueva si el jugador
+// sigue vivo.
 function applyFold(state) {
-  state.playerLives -= 0.5;
+  state.playerLives = roundLife(state.playerLives - FOLD_LIFE_COST);
 
   if (state.playerLives <= 0) {
     state.status = 'BUST_OUT';
-    return { label: 'HAND FOLDED' };
+    return { label: 'HAND FOLDED', location: 'player' };
   }
 
   dealNewHandForState(state);
-  return { label: 'HAND FOLDED' };
+  return { label: 'HAND FOLDED', location: 'player' };
 }
 
-// Resuelve un push usando el winChance de la mano actual.
+// Resuelve un push usando el winChance de la mano actual. Además reconstruye
+// (solo a efectos narrativos) unas cartas de rival plausibles coherentes con
+// el resultado: si gana el jugador, una mano rival que habría perdido; si
+// pierde, una que le habría ganado.
 function applyPush(state) {
-  const winChance = state.currentHand.winChance;
-  const playerWins = Math.random() <= winChance;
+  const hand = state.currentHand;
+  const playerWins = Math.random() <= hand.winChance;
+  const reveal = pickRevealRivalCards(hand.playerCards, hand.communityCards, hand.handCategory, playerWins);
 
   if (playerWins) {
     state.rivalLives -= 1;
-    if (state.rivalLives <= 0) {
-      state.status = 'REWARD';
-      return { label: 'YOU TAKE THE POT', rivalFelted: true };
-    }
-    dealNewHandForState(state);
-    return { label: 'YOU TAKE THE POT', rivalFelted: false };
+    const rivalFelted = state.rivalLives <= 0;
+    if (rivalFelted) state.status = 'REWARD';
+    else dealNewHandForState(state);
+    return { label: 'YOU TAKE THE POT', location: 'player', rivalFelted, revealCards: reveal.cards, revealMatched: reveal.matched, playerWon: true };
   }
 
-  state.playerLives -= 1;
-  if (state.playerLives <= 0) {
-    state.status = 'BUST_OUT';
-    return { label: 'VILLAIN TAKES THE POT', bustOut: true };
-  }
-  dealNewHandForState(state);
-  return { label: 'VILLAIN TAKES THE POT', bustOut: false };
+  state.playerLives = roundLife(state.playerLives - 1);
+  const bustOut = state.playerLives <= 0;
+  if (bustOut) state.status = 'BUST_OUT';
+  else dealNewHandForState(state);
+  return { label: 'VILLAIN TAKES THE POT', location: 'rival', bustOut, revealCards: reveal.cards, revealMatched: reveal.matched, playerWon: false };
 }
 
-// Aplica el premio del rival derrotado y lo suma al total acumulado.
+// Aplica el premio del rival derrotado (premio base propio del rival x
+// multiplicador) y lo suma al total acumulado.
 function applyRewardForCurrentRival(state) {
-  const reward = rollReward(BASE_PRIZE);
+  const rival = getCurrentRival(state);
+  const reward = rollReward(rival.basePrize);
   state.totalPrize += reward.amount;
   return reward;
 }

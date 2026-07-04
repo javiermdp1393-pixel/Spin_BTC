@@ -12,21 +12,22 @@
 <section id="launch-screen" class="screen active">
   <div class="hero-bg" style="background-image: url('assets/cover.jpg');"></div>
   <div class="hero-overlay">
-    <h1 class="title">SPINHO<br />BEAT THE CHAMPION</h1>
-    <p class="tagline">El torneo de Espinho no acepta invitados anónimos.</p>
-    <button id="start-button" class="btn btn-primary">Start Tournament</button>
+    <img src="assets/logo.png" alt="SPINHO Beat The Champion" class="logo-image" />
+    <p class="tagline">El campeón nacional de Spin&amp;GO España 2026 te espera en este torneo no apto para manos débiles. ¿Estás dispuesto a ascender a la gloria?</p>
+    <button id="start-button" class="btn btn-primary">INSCRIBIRSE</button>
   </div>
 </section>
 
 <!-- 2. REGISTRO -->
 <section id="register-screen" class="screen">
   <div class="panel">
-    <h2>Toma asiento en la mesa</h2>
+    <h2>Toma asiento en la primera mesa</h2>
     <p class="copy">Escribe tu nombre, elige tu apodo y toma asiento. La primera mano empieza ahora.</p>
     <label for="player-name">Player name</label>
     <input id="player-name" type="text" maxlength="24" placeholder="Tu nombre" />
     <label for="player-alias">Poker nickname</label>
     <input id="player-alias" type="text" maxlength="24" placeholder="Tu apodo de torneo" />
+    <p class="rules-summary">Cinco rivales se interponen entre tú y el campeón, y todos quieren derrotarlo antes que tú. Empiezas cada mesa con 3 vidas: si pierdes una mano, el rival te quita 1 vida; si decides no ir a por ella (foldear), pierdes 1/3 de vida.</p>
     <p id="register-error" class="error-text"></p>
     <button id="register-button" class="btn btn-primary">Entrar al torneo</button>
   </div>
@@ -39,6 +40,7 @@
     <h2 id="rival-intro-name"></h2>
     <p id="rival-intro-alias" class="alias"></p>
     <p id="rival-intro-lives" class="lives-label"></p>
+    <p id="rival-intro-modifier" class="modifier-text"></p>
     <p id="rival-intro-quote" class="quote"></p>
     <button id="rival-intro-button" class="btn btn-primary">Sentarse a la mesa</button>
   </div>
@@ -55,13 +57,16 @@
         <p id="battle-rival-alias" class="zone-alias"></p>
         <p id="battle-rival-lives" class="lives-hearts"></p>
       </div>
+      <p id="battle-rival-result-message" class="result-message"></p>
       <div id="battle-rival-cards" class="card-row hidden-cards"></div>
+      <p id="battle-reveal-caption" class="reveal-caption"></p>
     </div>
 
     <div class="table-zone">
       <p class="zone-label">Mesa</p>
       <div id="battle-community-cards" class="card-row"></div>
-      <p id="battle-odds-label" class="odds-label"></p>
+      <button id="battle-odds-label" class="odds-label" type="button"></button>
+      <p id="battle-odds-detail" class="odds-detail hidden"></p>
       <p id="battle-result-message" class="result-message"></p>
     </div>
 
@@ -84,16 +89,24 @@
 <!-- 5. RIVAL DERROTADO + RECOMPENSA -->
 <section id="reward-screen" class="screen">
   <div class="panel">
-    <h2>RIVAL FELTED</h2>
+    <h2>RIVAL ELIMINADO</h2>
     <p id="reward-defeat-line" class="quote"></p>
-    <div class="reward-box">
+
+    <button id="spin-reward-button" class="btn btn-primary">Girar la ruleta del premio</button>
+
+    <div id="reward-reel" class="reward-reel hidden">
+      <span id="reward-reel-value">x2</span>
+    </div>
+
+    <div id="reward-box" class="reward-box hidden">
       <p>Premio base: <span id="reward-base"></span></p>
       <p>Multiplicador: <span id="reward-multiplier"></span></p>
       <p id="reward-jackpot-banner" class="jackpot-banner hidden">¡JACKPOT!</p>
       <p class="reward-amount">Ganancia de la ronda: <span id="reward-amount"></span></p>
       <p class="total-prize">Premio acumulado: <span id="reward-total"></span></p>
     </div>
-    <button id="next-table-button" class="btn btn-primary">Next Table</button>
+
+    <button id="next-table-button" class="btn btn-primary hidden">Next Table</button>
   </div>
 </section>
 

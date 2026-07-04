@@ -2,6 +2,8 @@
 // Cada rival define su presentación narrativa y sus reglas de combate.
 // El campo "image" puede ser null: en ese caso la UI dibuja un panel
 // placeholder con el color/símbolo del palo en lugar de una foto.
+// "basePrize" es el premio base (antes de multiplicador) al derrotarlo,
+// en escalera según la dificultad del rival.
 const RIVALS = [
   {
     id: 'little-fizz',
@@ -13,7 +15,8 @@ const RIVALS = [
     introLine: 'I swear I had a feeling...',
     defeatLine: 'Vale... quizá soy más fish que pro.',
     lives: 1,
-    modifier: 0
+    modifier: 0,
+    basePrize: 15000
   },
   {
     id: 'trebol-gordo-mcbubble',
@@ -21,11 +24,12 @@ const RIVALS = [
     alias: 'The Bubble Boss',
     suit: 'clubs',
     suitSymbol: '♣',
-    image: null,
+    image: 'assets/rivals/trebol-gordo-mcbubble.jpg',
     introLine: 'Cuando me hincho, mejor foldear.',
     defeatLine: 'Se me ha pinchado el farol...',
     lives: 2,
-    modifier: 0.03
+    modifier: 0.03,
+    basePrize: 25000
   },
   {
     id: 'octavio-diamante',
@@ -33,11 +37,12 @@ const RIVALS = [
     alias: 'Eight Hands, One Tell',
     suit: 'diamonds',
     suitSymbol: '♦',
-    image: null,
+    image: 'assets/rivals/octavio-diamante.jpg',
     introLine: 'Ocho manos, un solo tell. Intenta encontrarlo.',
     defeatLine: 'Ocho manos... y ninguna salvación.',
     lives: 3,
-    modifier: 0.05
+    modifier: 0.05,
+    basePrize: 42500
   },
   {
     id: 'sharko-spades',
@@ -49,7 +54,8 @@ const RIVALS = [
     introLine: 'Yo no persigo manos. Cazo rivers.',
     defeatLine: 'El river hoy no tenía dientes.',
     lives: 3,
-    modifier: 0.07
+    modifier: 0.07,
+    basePrize: 63000
   },
   {
     id: 'fabrizio',
@@ -61,7 +67,8 @@ const RIVALS = [
     introLine: 'No rompo corazones, rompo tus odds.',
     defeatLine: 'Me has roto el corazón... y el stack.',
     lives: 4,
-    modifier: 0.10
+    modifier: 0.10,
+    basePrize: 78500
   },
   {
     id: 'el-pirulas',
@@ -69,11 +76,14 @@ const RIVALS = [
     alias: 'Final Hand',
     suit: 'champion',
     suitSymbol: '👑',
-    image: null,
+    image: 'assets/rivals/el-pirulas.jpg',
     introLine: 'Bienvenido a mi mesa, aquí hasta los ases sudan.',
     defeatLine: 'La última mano era tuya. Hoy la mesa te pertenece.',
     lives: 5,
     modifier: 0.12,
+    // No se especificó premio base para El Pirulas en el encargo (solo del 1 al 5).
+    // Se deja en 100.000 EUR como cierre de escalera; ajustar si se quiere otro valor.
+    basePrize: 100000,
     finalBoss: true
   }
 ];
