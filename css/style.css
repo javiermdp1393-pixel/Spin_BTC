@@ -1,0 +1,362 @@
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background: #0b0b0f;
+  color: #f2e9d8;
+  font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+.screen {
+  display: none;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 24px;
+}
+
+.screen.active {
+  display: flex;
+}
+
+.btn {
+  font-family: inherit;
+  font-size: 1.05rem;
+  padding: 14px 32px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  margin: 8px;
+  transition: transform 0.1s ease;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background: linear-gradient(180deg, #d4af37, #a67c1e);
+  color: #1a1206;
+  font-weight: bold;
+}
+
+.btn-secondary {
+  background: #2a2a33;
+  color: #f2e9d8;
+  border: 1px solid #55505f;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* --- Launch screen --- */
+
+#launch-screen {
+  position: relative;
+  padding: 0;
+  overflow: hidden;
+}
+
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center 15%;
+  filter: brightness(0.55);
+}
+
+.hero-overlay {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 24px;
+}
+
+.title {
+  font-size: 2.6rem;
+  letter-spacing: 2px;
+  color: #f4d976;
+  text-shadow: 0 4px 18px rgba(0, 0, 0, 0.8);
+  margin-bottom: 12px;
+}
+
+.tagline {
+  color: #e8dcc0;
+  max-width: 420px;
+  margin: 0 auto 20px;
+}
+
+/* --- Panels (register, rival intro, reward, bust out, final) --- */
+
+.panel {
+  background: #16151c;
+  border: 1px solid #35313d;
+  border-radius: 12px;
+  padding: 32px;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+}
+
+.panel label {
+  display: block;
+  text-align: left;
+  margin-top: 14px;
+  margin-bottom: 4px;
+  color: #cfc4a8;
+}
+
+.panel input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #45404d;
+  background: #0e0d12;
+  color: #f2e9d8;
+  font-size: 1rem;
+}
+
+.error-text {
+  color: #ff6b6b;
+  min-height: 1.2em;
+  margin-top: 10px;
+}
+
+.copy {
+  color: #cfc4a8;
+}
+
+.alias {
+  color: #d4af37;
+  font-style: italic;
+}
+
+.lives-label {
+  color: #cfc4a8;
+}
+
+.quote {
+  font-style: italic;
+  color: #e8dcc0;
+  margin: 16px 0;
+}
+
+/* --- Portraits --- */
+
+.portrait {
+  width: 100%;
+  border-radius: 10px;
+  background-color: #1f1c26;
+  background-size: cover;
+  background-position: center top;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 12px;
+}
+
+.portrait-large {
+  height: 260px;
+  font-size: 5rem;
+}
+
+.portrait-small {
+  height: 100px;
+  width: 100px;
+  font-size: 2.4rem;
+  margin-bottom: 6px;
+}
+
+.placeholder-clubs { background: radial-gradient(circle, #1c3d1f, #0b170c); }
+.placeholder-diamonds { background: radial-gradient(circle, #3d2b1c, #170f0b); }
+.placeholder-champion { background: radial-gradient(circle, #4a3a0e, #1a1404); }
+
+/* --- Battle screen --- */
+
+.battle-layout {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.rival-zone, .player-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.zone-info {
+  text-align: center;
+}
+
+.zone-name {
+  font-weight: bold;
+  margin: 0;
+  color: #f2e9d8;
+}
+
+.zone-alias {
+  margin: 0;
+  font-style: italic;
+  color: #d4af37;
+  font-size: 0.9rem;
+}
+
+.table-zone {
+  text-align: center;
+}
+
+.zone-label {
+  color: #8a8394;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 2px;
+}
+
+.card-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-height: 84px;
+}
+
+.card {
+  width: 54px;
+  height: 76px;
+  background: #f5efe0;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.1rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.card.red {
+  color: #b3222f;
+}
+
+.card.black {
+  color: #1a1a1a;
+}
+
+.card-back {
+  background: repeating-linear-gradient(45deg, #6a1622, #6a1622 6px, #4d0f19 6px, #4d0f19 12px);
+  color: #d4af37;
+  font-size: 1.6rem;
+}
+
+.odds-label {
+  display: inline-block;
+  background: #2a2a33;
+  border: 1px solid #d4af37;
+  color: #f4d976;
+  padding: 6px 18px;
+  border-radius: 999px;
+  margin-top: 10px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.result-message {
+  min-height: 1.5em;
+  font-weight: bold;
+  font-size: 1.15rem;
+  color: #f4d976;
+  margin-top: 8px;
+}
+
+.battle-actions {
+  margin-top: 6px;
+}
+
+/* --- Lives hearts --- */
+
+.hearts {
+  display: inline-flex;
+  gap: 2px;
+  vertical-align: middle;
+}
+
+.heart {
+  position: relative;
+  display: inline-block;
+  width: 1.1em;
+  font-size: 1.3rem;
+  color: #4a4650;
+}
+
+.heart::before {
+  content: '♥';
+}
+
+.heart.full {
+  color: #ff3b53;
+}
+
+.heart.half::after {
+  content: '♥';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 50%;
+  overflow: hidden;
+  color: #ff3b53;
+}
+
+.lives-number {
+  margin-left: 4px;
+  color: #cfc4a8;
+  font-size: 0.9rem;
+}
+
+/* --- Reward screen --- */
+
+.reward-box {
+  background: #0e0d12;
+  border: 1px solid #35313d;
+  border-radius: 10px;
+  padding: 18px;
+  margin: 16px 0;
+}
+
+.reward-box p {
+  margin: 6px 0;
+}
+
+.reward-amount {
+  font-weight: bold;
+  color: #f4d976;
+  font-size: 1.1rem;
+}
+
+.total-prize {
+  font-weight: bold;
+  color: #d4af37;
+}
+
+.jackpot-banner {
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: #ff3b53;
+  text-shadow: 0 0 12px rgba(255, 59, 83, 0.8);
+  animation: pulse 0.6s infinite alternate;
+}
+
+@keyframes pulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.08); }
+}

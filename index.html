@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SPINHO BEAT THE CHAMPION</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- 1. PORTADA -->
+<section id="launch-screen" class="screen active">
+  <div class="hero-bg" style="background-image: url('assets/cover.jpg');"></div>
+  <div class="hero-overlay">
+    <h1 class="title">SPINHO<br />BEAT THE CHAMPION</h1>
+    <p class="tagline">El torneo de Espinho no acepta invitados anónimos.</p>
+    <button id="start-button" class="btn btn-primary">Start Tournament</button>
+  </div>
+</section>
+
+<!-- 2. REGISTRO -->
+<section id="register-screen" class="screen">
+  <div class="panel">
+    <h2>Toma asiento en la mesa</h2>
+    <p class="copy">Escribe tu nombre, elige tu apodo y toma asiento. La primera mano empieza ahora.</p>
+    <label for="player-name">Player name</label>
+    <input id="player-name" type="text" maxlength="24" placeholder="Tu nombre" />
+    <label for="player-alias">Poker nickname</label>
+    <input id="player-alias" type="text" maxlength="24" placeholder="Tu apodo de torneo" />
+    <p id="register-error" class="error-text"></p>
+    <button id="register-button" class="btn btn-primary">Entrar al torneo</button>
+  </div>
+</section>
+
+<!-- 3. INTRO DE RIVAL -->
+<section id="rival-intro-screen" class="screen">
+  <div class="panel">
+    <div id="rival-intro-portrait" class="portrait portrait-large"></div>
+    <h2 id="rival-intro-name"></h2>
+    <p id="rival-intro-alias" class="alias"></p>
+    <p id="rival-intro-lives" class="lives-label"></p>
+    <p id="rival-intro-quote" class="quote"></p>
+    <button id="rival-intro-button" class="btn btn-primary">Sentarse a la mesa</button>
+  </div>
+</section>
+
+<!-- 4. COMBATE -->
+<section id="battle-screen" class="screen">
+  <div class="battle-layout">
+
+    <div class="rival-zone">
+      <div id="battle-rival-portrait" class="portrait portrait-small"></div>
+      <div class="zone-info">
+        <p id="battle-rival-name" class="zone-name"></p>
+        <p id="battle-rival-alias" class="zone-alias"></p>
+        <p id="battle-rival-lives" class="lives-hearts"></p>
+      </div>
+      <div id="battle-rival-cards" class="card-row hidden-cards"></div>
+    </div>
+
+    <div class="table-zone">
+      <p class="zone-label">Mesa</p>
+      <div id="battle-community-cards" class="card-row"></div>
+      <p id="battle-odds-label" class="odds-label"></p>
+      <p id="battle-result-message" class="result-message"></p>
+    </div>
+
+    <div class="player-zone">
+      <div class="zone-info">
+        <p id="battle-player-name" class="zone-name"></p>
+        <p id="battle-player-lives" class="lives-hearts"></p>
+      </div>
+      <div id="battle-player-cards" class="card-row"></div>
+      <div class="battle-actions">
+        <button id="push-button" class="btn btn-primary">Ir a por ello</button>
+        <button id="fold-button" class="btn btn-secondary">Foldear</button>
+        <button id="continue-button" class="btn btn-primary hidden">Continuar</button>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- 5. RIVAL DERROTADO + RECOMPENSA -->
+<section id="reward-screen" class="screen">
+  <div class="panel">
+    <h2>RIVAL FELTED</h2>
+    <p id="reward-defeat-line" class="quote"></p>
+    <div class="reward-box">
+      <p>Premio base: <span id="reward-base"></span></p>
+      <p>Multiplicador: <span id="reward-multiplier"></span></p>
+      <p id="reward-jackpot-banner" class="jackpot-banner hidden">¡JACKPOT!</p>
+      <p class="reward-amount">Ganancia de la ronda: <span id="reward-amount"></span></p>
+      <p class="total-prize">Premio acumulado: <span id="reward-total"></span></p>
+    </div>
+    <button id="next-table-button" class="btn btn-primary">Next Table</button>
+  </div>
+</section>
+
+<!-- 6. BUST OUT -->
+<section id="bust-out-screen" class="screen">
+  <div class="panel">
+    <h2>YOU BUST OUT</h2>
+    <p class="copy">No era tu mesa. Vuelve a sentarte.</p>
+    <p class="total-prize">Premio acumulado perdido: <span id="bustout-total"></span></p>
+    <button id="retry-button" class="btn btn-primary">Reintentar torneo</button>
+  </div>
+</section>
+
+<!-- 7. PANTALLA FINAL -->
+<section id="final-screen" class="screen">
+  <div class="panel">
+    <div class="portrait portrait-large" style="background-image: url('assets/champion.jpg');"></div>
+    <h2>CHAMPION CROWNED</h2>
+    <p class="copy">Te has convertido en el campeón de SPINHO BEAT THE CHAMPION. Felicidades.</p>
+    <p class="total-prize">Premio total acumulado: <span id="final-total"></span></p>
+  </div>
+</section>
+
+<script src="js/rivals.js"></script>
+<script src="js/poker.js"></script>
+<script src="js/odds.js"></script>
+<script src="js/rewards.js"></script>
+<script src="js/state.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
