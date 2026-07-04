@@ -31,7 +31,7 @@ const RIVALS = [
     introLine: 'Cuando me hincho, mejor foldear.',
     defeatLine: 'Se me ha pinchado el farol...',
     lives: 2,
-    rivalSkill: 0.05,
+    rivalSkill: 0.08,
     basePrize: 25000
   },
   {
@@ -44,7 +44,7 @@ const RIVALS = [
     introLine: 'Ocho manos, un solo tell. Intenta encontrarlo.',
     defeatLine: 'Ocho manos... y ninguna salvación.',
     lives: 3,
-    rivalSkill: 0.10,
+    rivalSkill: 0.14,
     basePrize: 42500
   },
   {
@@ -57,7 +57,7 @@ const RIVALS = [
     introLine: 'Yo no persigo manos. Cazo rivers.',
     defeatLine: 'El river hoy no tenía dientes.',
     lives: 3,
-    rivalSkill: 0.15,
+    rivalSkill: 0.19,
     basePrize: 63000
   },
   {
@@ -70,7 +70,7 @@ const RIVALS = [
     introLine: 'No rompo corazones, rompo tus odds.',
     defeatLine: 'Me has roto el corazón... y el stack.',
     lives: 4,
-    rivalSkill: 0.20,
+    rivalSkill: 0.25,
     basePrize: 78500
   },
   {
@@ -81,9 +81,9 @@ const RIVALS = [
     suitSymbol: '👑',
     image: 'assets/rivals/el-pirulas.jpg',
     introLine: 'Bienvenido a mi mesa, aquí hasta los ases sudan.',
-    defeatLine: 'La última mano era tuya. Hoy la mesa te pertenece.',
+    defeatLine: 'Ninguna mesa me había visto caer... hasta esta noche. La corona de Espinho ya es tuya, campeón.',
     lives: 5,
-    rivalSkill: 0.25,
+    rivalSkill: 0.30,
     // No se especificó premio base para El Pirulas en el encargo (solo del 1 al 5).
     // Se deja en 100.000 EUR como cierre de escalera; ajustar si se quiere otro valor.
     basePrize: 100000,
