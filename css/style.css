@@ -523,3 +523,72 @@ h2 {
   from { transform: scale(1); }
   to { transform: scale(1.08); }
 }
+
+/* --- Leaderboard local (pantalla final) --- */
+
+.new-record-banner {
+  font-weight: bold;
+  color: #f4d976;
+  text-shadow: 0 0 10px rgba(244, 217, 118, 0.6);
+  margin: 4px 0 0;
+}
+
+.leaderboard {
+  margin-top: 20px;
+  text-align: left;
+}
+
+.leaderboard-list {
+  list-style: none;
+  counter-reset: leaderboard-rank;
+  margin: 8px 0 0;
+  padding: 0;
+  background: #0e0d12;
+  border: 1px solid #2a2731;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.leaderboard-list li {
+  counter-increment: leaderboard-rank;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  border-bottom: 1px solid #201e26;
+}
+
+.leaderboard-list li:last-child {
+  border-bottom: none;
+}
+
+.leaderboard-list li::before {
+  content: counter(leaderboard-rank) '.';
+  color: #6f6878;
+  font-weight: bold;
+  min-width: 1.4em;
+}
+
+.leaderboard-name {
+  flex: 1;
+  color: #e8dcc0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.leaderboard-amount {
+  color: #d4af37;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.leaderboard-list li.current-run {
+  background: rgba(212, 175, 55, 0.12);
+}
+
+.leaderboard-list li.current-run .leaderboard-name,
+.leaderboard-list li.current-run .leaderboard-amount {
+  color: #f4d976;
+}

@@ -380,5 +380,33 @@ document.getElementById('retry-button').addEventListener('click', () => {
 // --- Pantalla: Final ---
 
 function renderFinal() {
+  setPortraitElement(document.getElementById('final-portrait'), { image: 'assets/champion.jpg', name: 'Campeón', suit: 'champion', suitSymbol: '👑' });
   document.getElementById('final-total').textContent = formatEuros(gameState.totalPrize);
+
+  const runEntry = {
+    name: gameState.player.name,
+    alias: gameState.player.alias,
+    totalPrize: gameState.totalPrize,
+    date: new Date().toISOString()
+  };
+  const leaderboard = saveRunToLeaderboard(runEntry);
+  renderLeaderboardList(leaderboard, runEntry);
+}
+
+// Pinta el histórico de mejores premios (guardado en este mismo navegador)
+// y marca si la partida recién ganada es un nuevo récord personal.
+function renderLeaderboardList(leaderboard, currentRunEntry) {
+  const listEl = document.getElementById('leaderboard-list');
+  listEl.innerHTML = '';
+
+  leaderboard.forEach((entry) => {
+    const li = document.createElement('li');
+    const isCurrentRun = entry === currentRunEntry;
+    if (isCurrentRun) li.classList.add('current-run');
+    li.innerHTML = `<span class="leaderboard-name">${entry.name} "${entry.alias}"</span><span class="leaderboard-amount">${formatEuros(entry.totalPrize)}</span>`;
+    listEl.appendChild(li);
+  });
+
+  const isNewRecord = leaderboard[0] === currentRunEntry && leaderboard.length > 0;
+  document.getElementById('final-new-record').classList.toggle('hidden', !isNewRecord);
 }
