@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SPINHO BEAT THE CHAMPION</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- Botón de silencio (persistente en todas las pantallas) -->
+<button id="mute-button" class="mute-button" type="button" aria-label="Silenciar sonido">🔊</button>
+
+<!-- 1. PORTADA -->
+<section id="launch-screen" class="screen active">
+  <div class="hero-bg" style="background-image: url('assets/cover.jpg');"></div>
+  <div class="hero-overlay">
+    <img src="assets/logo.jpg" alt="SPINHO Beat The Champion" class="logo-image" />
+    <p class="tagline">El campeón nacional de Spin&amp;GO España 2026 te espera en este torneo no apto para manos débiles.<br />¿Estás dispuesto a ascender a la gloria?</p>
+    <p class="invite-note">Solo se puede acceder al torneo con invitación</p>
+    <input id="access-password" type="password" class="access-input" placeholder="Contraseña de invitación" maxlength="32" autocomplete="off" />
+    <p id="access-error" class="error-text"></p>
+    <button id="start-button" class="btn btn-primary">ACREDITARSE</button>
+    <p class="credits">WaterMachine 2026. Hecho con cariño y ganas de que te pagues algo</p>
+  </div>
+</section>
+
+<!-- 2. REGISTRO -->
+<section id="register-screen" class="screen">
+  <div class="panel">
+    <h2>Toma asiento en la primera mesa</h2>
+    <p class="copy">Escribe tu nombre, elige tu apodo y toma asiento. La primera mano empieza ahora.</p>
+    <label for="player-name">Player name</label>
+    <input id="player-name" type="text" maxlength="24" placeholder="Tu nombre" />
+    <label for="player-alias">Poker nickname</label>
+    <input id="player-alias" type="text" maxlength="24" placeholder="Tu apodo de torneo" />
+    <p class="rules-summary">Antes de retar al campeón deberás vencer a cinco rivales, cada uno más peligroso que el anterior. Empiezas cada mesa con 3 vidas: si pierdes una mano, el rival te quita 1 vida; si decides no ir a por ella (foldear), pierdes 1/4 de vida. Y si lo ves claro puedes <strong>Doblar</strong>: pones 2 vidas en juego (ganas o pierdes el doble), solo disponible con 2 vidas o más.</p>
+    <p id="register-error" class="error-text"></p>
+    <div class="mode-buttons">
+      <button id="register-button" class="btn btn-primary">Entrar al Torneo</button>
+      <button id="freezeout-button" class="btn btn-danger">Freezeout Mode</button>
+    </div>
+    <div class="mode-descriptions">
+      <p><strong>Arcade Mode</strong><br />Las vidas se reinician al empezar cada rival.</p>
+      <p><strong>Freezeout Mode</strong><br />Las vidas no se reinician. Sobrevive con el mismo stack hasta El Pirulas. Empiezas con 5 vidas, recuperas una por cada rival derrotado y tienes un fold gratis por rival.</p>
+    </div>
+    <p id="demo-note" class="demo-note hidden">🛠️ Modo demo/QA activo — cada mano elimina al rival.</p>
+  </div>
+</section>
+
+<!-- 3. INTRO DE RIVAL -->
+<section id="rival-intro-screen" class="screen">
+  <div class="panel">
+    <div id="rival-intro-portrait" class="portrait portrait-large"></div>
+    <h2 id="rival-intro-name"></h2>
+    <p id="rival-intro-alias" class="alias"></p>
+    <p id="rival-intro-lives" class="lives-label"></p>
+    <p id="rival-intro-modifier" class="modifier-text"></p>
+    <p id="rival-intro-special" class="special-text"></p>
+    <p id="rival-intro-quote" class="quote"></p>
+    <div id="rival-intro-roadmap" class="roadmap"></div>
+    <button id="rival-intro-button" class="btn btn-primary">Sentarse a la mesa</button>
+  </div>
+</section>
+
+<!-- 4. COMBATE -->
+<section id="battle-screen" class="screen">
+  <div class="battle-layout">
+
+    <div class="rival-zone">
+      <div id="battle-rival-portrait" class="portrait portrait-small"></div>
+      <div class="zone-info">
+        <p id="battle-rival-name" class="zone-name"></p>
+        <p id="battle-rival-alias" class="zone-alias"></p>
+        <p id="battle-rival-lives" class="lives-hearts"></p>
+      </div>
+      <p id="battle-rival-line" class="rival-line"></p>
+      <p id="battle-rival-result-message" class="result-message"></p>
+      <div id="battle-rival-cards" class="card-row hidden-cards"></div>
+      <p id="battle-reveal-caption" class="reveal-caption"></p>
+    </div>
+
+    <div class="table-zone">
+      <p class="zone-label">Mesa</p>
+      <div id="battle-community-cards" class="community-cards"></div>
+      <button id="battle-odds-label" class="odds-label" type="button"></button>
+      <p id="battle-odds-detail" class="odds-detail hidden"></p>
+      <p id="battle-streak" class="streak-badge hidden"></p>
+      <p id="battle-result-message" class="result-message"></p>
+    </div>
+
+    <div class="player-zone">
+      <div class="zone-info">
+        <p id="battle-player-name" class="zone-name"></p>
+        <p id="battle-player-lives" class="lives-hearts"></p>
+      </div>
+      <div id="battle-player-cards" class="card-row"></div>
+      <div class="battle-actions">
+        <div class="action-row-main">
+          <button id="push-button" class="btn btn-primary">CALL</button>
+          <button id="fold-button" class="btn btn-danger">FOLD</button>
+        </div>
+        <button id="double-button" class="btn btn-risk">DOBLAR</button>
+        <button id="continue-button" class="btn btn-primary hidden">Continuar</button>
+      </div>
+      <p id="double-hint" class="double-hint"></p>
+      <p id="freefold-hint" class="double-hint"></p>
+    </div>
+
+  </div>
+</section>
+
+<!-- 5. RIVAL DERROTADO + RECOMPENSA -->
+<section id="reward-screen" class="screen">
+  <div class="panel">
+    <h2>RIVAL ELIMINADO</h2>
+    <p id="reward-defeat-line" class="quote"></p>
+
+    <button id="spin-reward-button" class="btn btn-primary">Girar la ruleta del premio</button>
+
+    <div id="reward-reel" class="reward-reel hidden">
+      <span id="reward-reel-value">x2</span>
+    </div>
+
+    <div id="reward-box" class="reward-box hidden">
+      <p>Premio base: <span id="reward-base"></span></p>
+      <p>Multiplicador: <span id="reward-multiplier"></span></p>
+      <p id="reward-jackpot-banner" class="jackpot-banner hidden">¡JACKPOT!</p>
+      <p class="reward-amount">Ganancia de la ronda: <span id="reward-amount"></span></p>
+      <p class="total-prize">Premio acumulado: <span id="reward-total"></span></p>
+    </div>
+
+    <div id="reward-roadmap" class="roadmap"></div>
+
+    <button id="next-table-button" class="btn btn-primary hidden">Next Table</button>
+  </div>
+</section>
+
+<!-- 6. BUST OUT -->
+<section id="bust-out-screen" class="screen">
+  <div class="panel">
+    <h2>HAS BUSTEADO</h2>
+    <p class="copy">No era tu mesa. Vuelve a sentarte.</p>
+    <p class="total-prize">Premio acumulado perdido: <span id="bustout-total"></span></p>
+    <button id="retry-button" class="btn btn-primary">Reintentar torneo</button>
+  </div>
+</section>
+
+<!-- 7. PANTALLA FINAL -->
+<section id="final-screen" class="screen">
+  <div class="panel">
+    <div id="final-portrait" class="portrait portrait-large"></div>
+    <h2>TENEMOS NUEVO CAMPEÓN</h2>
+    <p class="copy">Te has convertido en el campeón de SPINHO BEAT THE CHAMPION. Felicidades.</p>
+    <p class="total-prize">Premio total acumulado: <span id="final-total"></span></p>
+    <p id="final-new-record" class="new-record-banner hidden">¡Nuevo récord personal!</p>
+
+    <div class="leaderboard">
+      <p class="zone-label">Tus mejores premios</p>
+      <ol id="leaderboard-list" class="leaderboard-list"></ol>
+    </div>
+  </div>
+</section>
+
+<script src="js/rivals.js"></script>
+<script src="js/poker.js"></script>
+<script src="js/odds.js"></script>
+<script src="js/rewards.js"></script>
+<script src="js/leaderboard.js"></script>
+<script src="js/sound.js"></script>
+<script src="js/state.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

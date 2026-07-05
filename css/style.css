@@ -1,0 +1,856 @@
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background: #0b0b0f;
+  color: #f2e9d8;
+  font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+h2 {
+  font-family: 'Arial Black', 'Arial', 'Helvetica Neue', sans-serif;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.screen {
+  display: none;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 24px;
+}
+
+.screen.active {
+  display: flex;
+}
+
+.btn {
+  font-family: 'Arial', 'Helvetica Neue', sans-serif;
+  font-size: 1.05rem;
+  padding: 14px 32px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  margin: 8px;
+  transition: transform 0.1s ease;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn-primary {
+  background: linear-gradient(180deg, #d4af37, #a67c1e);
+  color: #1a1206;
+  font-weight: bold;
+}
+
+.btn-secondary {
+  background: #2a2a33;
+  color: #f2e9d8;
+  border: 1px solid #55505f;
+}
+
+.btn-danger {
+  background: linear-gradient(180deg, #c62b3f, #7d1622);
+  color: #fff2f2;
+  font-weight: bold;
+}
+
+.btn-danger:disabled {
+  background: #3a2226;
+  color: #8a7076;
+}
+
+/* Doblar: naranja de "riesgo/precaución", distinto del oro (CALL) y del rojo (FOLD). */
+.btn-risk {
+  background: linear-gradient(180deg, #f0871f, #b05610);
+  color: #201203;
+  font-weight: bold;
+  box-shadow: 0 0 12px rgba(240, 135, 31, 0.35);
+}
+
+.btn-risk:disabled {
+  background: #3a2c1c;
+  color: #8a7a66;
+  box-shadow: none;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* --- Launch screen --- */
+
+#launch-screen {
+  position: relative;
+  padding: 0;
+  overflow: hidden;
+}
+
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center 22%;
+  filter: brightness(0.5);
+}
+
+.hero-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /* Atenúa el logo y la cara de fondo de la foto para que no compitan
+     visualmente con el logo nítido y el texto que van encima. */
+  background: linear-gradient(180deg, rgba(6, 5, 8, 0.88) 0%, rgba(6, 5, 8, 0.55) 38%, rgba(6, 5, 8, 0.75) 75%, rgba(6, 5, 8, 0.92) 100%);
+}
+
+.hero-overlay {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 24px;
+}
+
+.logo-image {
+  max-width: 340px;
+  width: 80vw;
+  height: auto;
+  filter: drop-shadow(0 4px 18px rgba(0, 0, 0, 0.8));
+  margin-bottom: 12px;
+}
+
+.tagline {
+  color: #e8dcc0;
+  max-width: 440px;
+  margin: 0 auto 20px;
+}
+
+/* --- Panels (register, rival intro, reward, bust out, final) --- */
+
+.panel {
+  background: #16151c;
+  border: 1px solid #35313d;
+  border-radius: 12px;
+  padding: 32px;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+}
+
+.panel label {
+  display: block;
+  text-align: left;
+  margin-top: 14px;
+  margin-bottom: 4px;
+  color: #cfc4a8;
+}
+
+.panel input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #45404d;
+  background: #0e0d12;
+  color: #f2e9d8;
+  font-size: 1rem;
+}
+
+.rules-summary {
+  text-align: left;
+  color: #a79c86;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  background: #0e0d12;
+  border: 1px solid #2a2731;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-top: 16px;
+}
+
+.error-text {
+  color: #ff6b6b;
+  min-height: 1.2em;
+  margin-top: 10px;
+}
+
+.copy {
+  color: #cfc4a8;
+}
+
+.alias {
+  color: #d4af37;
+  font-style: italic;
+}
+
+.lives-label {
+  color: #cfc4a8;
+}
+
+.modifier-text {
+  color: #ff8a65;
+  font-size: 0.9rem;
+  min-height: 1.2em;
+}
+
+.quote {
+  font-style: italic;
+  color: #e8dcc0;
+  margin: 16px 0;
+}
+
+/* --- Portraits --- */
+
+.portrait {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  border-radius: 10px;
+  background-color: #0d0c10;
+  background-size: cover;
+  background-position: center center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 12px;
+}
+
+/* Relleno difuminado: copia ampliada y borrosa de la imagen que tapa las
+   franjas del "contain" con el propio color del arte. */
+.portrait-blur {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(22px) brightness(0.5);
+  transform: scale(1.2);
+}
+
+.portrait-img {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.portrait-symbol {
+  position: relative;
+  z-index: 1;
+}
+
+.portrait-large {
+  height: 320px;
+  font-size: 5rem;
+}
+
+.portrait-small {
+  height: 110px;
+  width: 110px;
+  font-size: 2.4rem;
+  margin-bottom: 6px;
+}
+
+.placeholder-clubs { background: radial-gradient(circle, #1c3d1f, #0b170c); }
+.placeholder-diamonds { background: radial-gradient(circle, #3d2b1c, #170f0b); }
+.placeholder-champion { background: radial-gradient(circle, #4a3a0e, #1a1404); }
+
+/* --- Battle screen --- */
+
+.battle-layout {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.rival-zone, .player-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.zone-info {
+  text-align: center;
+}
+
+.zone-name {
+  font-weight: bold;
+  margin: 0;
+  color: #f2e9d8;
+}
+
+.zone-alias {
+  margin: 0;
+  font-style: italic;
+  color: #d4af37;
+  font-size: 0.9rem;
+}
+
+.table-zone {
+  text-align: center;
+}
+
+.zone-label {
+  color: #8a8394;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 2px;
+}
+
+.card-row {
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  min-height: 102px;
+}
+
+/* Mesa: 5 comunitarias en dos filas (3 + 2). */
+.community-cards {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+}
+
+.community-cards .card-row {
+  min-height: 0;
+}
+
+.reveal-caption {
+  font-style: italic;
+  color: #a79c86;
+  font-size: 0.85rem;
+  min-height: 1.1em;
+  margin: 2px 0 0;
+}
+
+/* --- Naipes con aspecto de baraja física --- */
+
+.card {
+  position: relative;
+  width: 66px;
+  height: 98px;
+  background: linear-gradient(180deg, #fffdf7, #f3ecda);
+  border: 1px solid #d8cfb4;
+  border-radius: 7px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.card.red {
+  color: #b3222f;
+}
+
+.card.black {
+  color: #1a1a1a;
+}
+
+.card-corner {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  font-size: 0.58rem;
+  font-weight: bold;
+  line-height: 1.05;
+  text-align: center;
+  z-index: 1;
+}
+
+.card-corner.corner-bottom {
+  top: auto;
+  left: auto;
+  bottom: 3px;
+  right: 3px;
+  transform: rotate(180deg);
+}
+
+.card-center {
+  position: absolute;
+  inset: 0;
+  padding: 17px 4px 4px;
+}
+
+.card-center.center-pips {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  height: 100%;
+}
+
+.card-center .pip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.62rem;
+  line-height: 1;
+}
+
+.card-center.center-ace {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.7rem;
+}
+
+.card-center.center-face {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.card-center.center-face .face-letter {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.card-center.center-face .face-suit {
+  font-size: 0.85rem;
+}
+
+.card-back {
+  background: repeating-linear-gradient(45deg, #6a1622, #6a1622 6px, #4d0f19 6px, #4d0f19 12px);
+  color: #d4af37;
+  font-size: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.odds-label {
+  display: inline-block;
+  background: #2a2a33;
+  border: 1px solid #d4af37;
+  color: #f4d976;
+  padding: 6px 18px;
+  border-radius: 999px;
+  margin-top: 10px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.odds-detail {
+  color: #cfc4a8;
+  font-size: 0.85rem;
+  margin-top: 6px;
+  max-width: 320px;
+}
+
+.result-message {
+  min-height: 1.5em;
+  font-weight: bold;
+  font-size: 1.15rem;
+  color: #f4d976;
+  margin-top: 4px;
+}
+
+#battle-rival-result-message {
+  color: #ff6b6b;
+}
+
+.battle-actions {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.action-row-main {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.double-hint {
+  min-height: 1em;
+  margin: 4px 0 0;
+  color: #a79c86;
+  font-size: 0.8rem;
+}
+
+/* --- Lives hearts --- */
+
+.hearts {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  vertical-align: middle;
+}
+
+.heart-svg {
+  display: block;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
+}
+
+.lives-number {
+  margin-left: 4px;
+  color: #cfc4a8;
+  font-size: 0.9rem;
+}
+
+/* --- Reward screen --- */
+
+.reward-box {
+  background: #0e0d12;
+  border: 1px solid #35313d;
+  border-radius: 10px;
+  padding: 18px;
+  margin: 16px 0;
+}
+
+.reward-box p {
+  margin: 6px 0;
+}
+
+.reward-amount {
+  font-weight: bold;
+  color: #f4d976;
+  font-size: 1.1rem;
+}
+
+.total-prize {
+  font-weight: bold;
+  color: #d4af37;
+}
+
+.jackpot-banner {
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: #ff3b53;
+  text-shadow: 0 0 12px rgba(255, 59, 83, 0.8);
+  animation: pulse 0.6s infinite alternate;
+}
+
+.reward-reel {
+  background: #0e0d12;
+  border: 2px solid #d4af37;
+  border-radius: 10px;
+  padding: 18px;
+  margin: 16px 0;
+}
+
+.reward-reel span {
+  font-family: 'Arial Black', 'Arial', sans-serif;
+  font-size: 2.2rem;
+  font-weight: bold;
+  color: #f4d976;
+  letter-spacing: 2px;
+}
+
+@keyframes pulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.08); }
+}
+
+/* --- Leaderboard local (pantalla final) --- */
+
+.new-record-banner {
+  font-weight: bold;
+  color: #f4d976;
+  text-shadow: 0 0 10px rgba(244, 217, 118, 0.6);
+  margin: 4px 0 0;
+}
+
+.leaderboard {
+  margin-top: 20px;
+  text-align: left;
+}
+
+.leaderboard-list {
+  list-style: none;
+  counter-reset: leaderboard-rank;
+  margin: 8px 0 0;
+  padding: 0;
+  background: #0e0d12;
+  border: 1px solid #2a2731;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.leaderboard-list li {
+  counter-increment: leaderboard-rank;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  border-bottom: 1px solid #201e26;
+}
+
+.leaderboard-list li:last-child {
+  border-bottom: none;
+}
+
+.leaderboard-list li::before {
+  content: counter(leaderboard-rank) '.';
+  color: #6f6878;
+  font-weight: bold;
+  min-width: 1.4em;
+}
+
+.leaderboard-name {
+  flex: 1;
+  color: #e8dcc0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.leaderboard-amount {
+  color: #d4af37;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.leaderboard-list li.current-run {
+  background: rgba(212, 175, 55, 0.12);
+}
+
+.leaderboard-list li.current-run .leaderboard-name,
+.leaderboard-list li.current-run .leaderboard-amount {
+  color: #f4d976;
+}
+
+/* --- Botón de silencio --- */
+
+.mute-button {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 50;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid #45404d;
+  background: rgba(14, 13, 18, 0.8);
+  color: #f2e9d8;
+  font-size: 1.2rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+/* --- Habilidad especial del rival (intro) --- */
+
+.special-text {
+  color: #f4d976;
+  font-size: 0.9rem;
+  background: rgba(244, 217, 118, 0.08);
+  border: 1px solid rgba(244, 217, 118, 0.3);
+  border-radius: 8px;
+  padding: 8px 10px;
+  min-height: 0;
+}
+
+.special-text:empty {
+  display: none;
+}
+
+/* --- Insignia de racha --- */
+
+.streak-badge {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #f0871f, #b0430a);
+  color: #fff6ec;
+  font-weight: bold;
+  font-size: 0.85rem;
+  box-shadow: 0 0 12px rgba(240, 135, 31, 0.5);
+  animation: pulse 0.7s infinite alternate;
+}
+
+/* --- Roadmap / bracket del torneo --- */
+
+.roadmap {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  overflow-x: auto;
+  padding: 10px 2px;
+  margin: 14px 0 6px;
+}
+
+.roadmap-node {
+  flex: 0 0 auto;
+  width: 52px;
+  text-align: center;
+  opacity: 0.85;
+}
+
+.roadmap-icon {
+  width: 42px;
+  height: 42px;
+  margin: 0 auto 4px;
+  border-radius: 8px;
+  background-color: #1f1c26;
+  background-size: cover;
+  background-position: center top;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  border: 2px solid #35313d;
+}
+
+.roadmap-node.hidden-rival .roadmap-icon {
+  color: #6f6878;
+  background: repeating-linear-gradient(45deg, #17151d, #17151d 5px, #201d27 5px, #201d27 10px);
+}
+
+.roadmap-node.defeated {
+  opacity: 0.5;
+}
+
+.roadmap-node.defeated .roadmap-icon {
+  filter: grayscale(0.7);
+  border-color: #2a2731;
+}
+
+.roadmap-node.current .roadmap-icon {
+  border-color: #d4af37;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.6);
+}
+
+.roadmap-node.boss .roadmap-icon {
+  border-color: #c62b3f;
+}
+
+.roadmap-label {
+  font-size: 0.55rem;
+  line-height: 1.1;
+  color: #cfc4a8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* --- Animaciones: reparto de cartas y pérdida de vida --- */
+
+@keyframes dealIn {
+  from { opacity: 0; transform: translateY(-20px) scale(0.9); }
+  to { opacity: 1; transform: none; }
+}
+
+.card--deal {
+  animation: dealIn 0.34s ease both;
+}
+
+@keyframes lifeLost {
+  0% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+  100% { transform: translateX(0); }
+}
+
+.life-lost {
+  animation: lifeLost 0.5s ease;
+}
+
+/* --- Portada: acceso por contraseña y créditos --- */
+
+.invite-note {
+  color: #f4d976;
+  font-weight: bold;
+  margin: 4px 0 12px;
+  letter-spacing: 0.5px;
+}
+
+.access-input {
+  width: 100%;
+  max-width: 300px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #45404d;
+  background: rgba(14, 13, 18, 0.85);
+  color: #f2e9d8;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.credits {
+  margin-top: 26px;
+  color: #6f6878;
+  font-size: 0.72rem;
+  letter-spacing: 1px;
+  font-style: italic;
+}
+
+/* --- Registro: selección de modo --- */
+
+.mode-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.mode-descriptions {
+  margin-top: 14px;
+  text-align: left;
+  color: #a79c86;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  background: #0e0d12;
+  border: 1px solid #2a2731;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.mode-descriptions p {
+  margin: 0 0 10px;
+}
+
+.mode-descriptions p:last-child {
+  margin-bottom: 0;
+}
+
+.mode-descriptions strong {
+  color: #d4af37;
+}
+
+.demo-note {
+  margin-top: 12px;
+  color: #7fd1ff;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+/* --- Frase dinámica del rival en combate --- */
+
+.rival-line {
+  font-style: italic;
+  color: #ff8a65;
+  font-size: 0.95rem;
+  min-height: 1.1em;
+  margin: 2px 0 0;
+  max-width: 340px;
+}
+
+.rival-line:empty {
+  display: none;
+}
