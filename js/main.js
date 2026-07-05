@@ -242,6 +242,7 @@ function renderRivalIntro() {
 
   document.getElementById('rival-intro-quote').textContent = `“${rival.introLine}”`;
   renderRoadmap('rival-intro-roadmap');
+  Sound.playMusic(rival.finalBoss ? 'pirulas' : 'mesas');
 }
 
 document.getElementById('rival-intro-button').addEventListener('click', () => {
@@ -354,7 +355,9 @@ function showBattleResult(result) {
 function renderStreakBadge() {
   const badge = document.getElementById('battle-streak');
   if (isStreakActive(gameState)) {
-    badge.textContent = `🔥 Racha ×${gameState.winStreak} — golpe reforzado (+½ corazón)`;
+    const bonus = streakBonusDamage(gameState.winStreak);
+    const bonusText = bonus >= 1 ? '+1 corazón' : '+½ corazón';
+    badge.textContent = `🔥 Racha ×${gameState.winStreak} — golpe reforzado (${bonusText})`;
     badge.classList.remove('hidden');
   } else {
     badge.textContent = '';
@@ -374,7 +377,7 @@ function buildComboCaption(result) {
     const base = result.doubled ? 2 : 1;
     const total = base + (result.streakBonus || 0);
     const damage = `pierde ${formatLifeNumber(total)} ${total === 1 ? 'vida' : 'vidas'}`;
-    const streakNote = result.streakBonus ? ' (+½ por racha)' : '';
+    const streakNote = result.streakBonus ? ` (+${result.streakBonus >= 1 ? '1' : '½'} por racha)` : '';
     return `Ganas con ${result.playerHandName}${doubleNote}. ${rival.name} tenía ${result.rivalHandName} y ${damage}${streakNote}.`;
   }
   if (result.outcome === 'LOSE') {
@@ -494,10 +497,12 @@ document.getElementById('spin-reward-button').addEventListener('click', () => {
     ticks++;
     const randomMultiplier = possibleMultipliers[Math.floor(Math.random() * possibleMultipliers.length)];
     reelValue.textContent = `x${randomMultiplier}`;
+    Sound.playRouletteTick();
 
     if (ticks >= totalTicks) {
       clearInterval(rewardSpinInterval);
       reelValue.textContent = `x${pendingReward.multiplier}`;
+      Sound.playRouletteStop();
       setTimeout(revealRewardBreakdown, 500);
     }
   }, 90);
@@ -534,6 +539,7 @@ document.getElementById('next-table-button').addEventListener('click', () => {
 
 function renderBustOut() {
   document.getElementById('bustout-total').textContent = formatEuros(gameState.totalPrize);
+  Sound.playMusic('derrota');
 }
 
 document.getElementById('retry-button').addEventListener('click', () => {
@@ -547,7 +553,7 @@ document.getElementById('retry-button').addEventListener('click', () => {
 function renderFinal() {
   setPortraitElement(document.getElementById('final-portrait'), { image: 'assets/champion.jpg', name: 'Campeón', suit: 'champion', suitSymbol: '👑' });
   document.getElementById('final-total').textContent = formatEuros(gameState.totalPrize);
-  Sound.playChampion();
+  Sound.playMusic('champion');
 
   const runEntry = {
     name: gameState.player.name,
@@ -579,18 +585,18 @@ function renderLeaderboardList(leaderboard, currentRunEntry) {
 
 // --- Sonido: arranque y botón de silencio ---
 
-// La música ambiente de casino arranca en el primer gesto del usuario (los
-// navegadores bloquean el audio automático). Basta con tocar la pantalla.
+// La música del lobby arranca en el primer gesto del usuario (los navegadores
+// bloquean el audio automático). Basta con tocar la pantalla.
 function enableAudioOnce() {
   Sound.init();
-  if (!Sound.isMuted()) Sound.startAmbient();
+  Sound.playMusic('lobby');
   document.removeEventListener('pointerdown', enableAudioOnce);
 }
 document.addEventListener('pointerdown', enableAudioOnce);
 
 document.getElementById('start-button').addEventListener('click', () => {
   Sound.init();
-  if (!Sound.isMuted()) Sound.startAmbient();
+  Sound.playMusic('lobby');
 });
 
 const muteButton = document.getElementById('mute-button');
@@ -601,7 +607,6 @@ function refreshMuteButton() {
 muteButton.addEventListener('click', () => {
   Sound.init();
   Sound.setMuted(!Sound.isMuted());
-  if (!Sound.isMuted()) Sound.startAmbient();
   refreshMuteButton();
 });
 refreshMuteButton();

@@ -4,10 +4,15 @@
 const PLAYER_STARTING_LIVES = 3;
 const FOLD_LIFE_COST = 1 / 4;
 
-// Racha: a partir de 2 manos ganadas seguidas, cada victoria hace medio
-// corazón de daño extra al rival.
+// Racha: bonus de daño escalonado. Con 2 victorias seguidas, cada mano
+// ganada hace medio corazón extra; con 3 o más, un corazón entero.
 const STREAK_ACTIVE_THRESHOLD = 2;
-const STREAK_BONUS_DAMAGE = 0.5;
+
+function streakBonusDamage(streak) {
+  if (streak >= 3) return 1;
+  if (streak >= STREAK_ACTIVE_THRESHOLD) return 0.5;
+  return 0;
+}
 
 function createInitialState() {
   return {
@@ -111,7 +116,7 @@ function resolveHand(state, stake, doubled) {
       return { ...base, label: 'EL PIRULAS RESISTE', location: 'player', outcome: 'WIN', rivalFelted: false, bossResisted: true };
     }
 
-    const bonus = isStreakActive(state) ? STREAK_BONUS_DAMAGE : 0;
+    const bonus = streakBonusDamage(state.winStreak);
     state.rivalLives = roundLife(state.rivalLives - (stake + bonus));
     const rivalFelted = state.rivalLives <= 0;
     if (rivalFelted) state.status = 'REWARD';
