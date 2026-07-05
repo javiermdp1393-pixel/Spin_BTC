@@ -73,6 +73,20 @@ h2 {
   color: #8a7076;
 }
 
+/* Doblar: naranja de "riesgo/precaución", distinto del oro (CALL) y del rojo (FOLD). */
+.btn-risk {
+  background: linear-gradient(180deg, #f0871f, #b05610);
+  color: #201203;
+  font-weight: bold;
+  box-shadow: 0 0 12px rgba(240, 135, 31, 0.35);
+}
+
+.btn-risk:disabled {
+  background: #3a2c1c;
+  color: #8a7a66;
+  box-shadow: none;
+}
+
 .hidden {
   display: none !important;
 }
@@ -443,6 +457,15 @@ h2 {
 
 .battle-actions {
   margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.action-row-main {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 .double-hint {
