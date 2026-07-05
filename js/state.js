@@ -59,14 +59,22 @@ function playerMaxLives(state) {
 }
 
 // Skill efectivo del rival (mayor en Freezeout), con tope de seguridad.
+// Un rival puede definir "freezeoutSkill" para fijar su propio valor en vez
+// de usar el multiplicador general (caso de El Pirulas, ajustado a mano).
 function effectiveRivalSkill(state, rival) {
+  if (isFreezeout(state) && rival.freezeoutSkill !== undefined) {
+    return Math.min(0.9, rival.freezeoutSkill);
+  }
   const mul = isFreezeout(state) ? FREEZEOUT.skillMultiplier : 1;
   return Math.min(0.9, rival.rivalSkill * mul);
 }
 
-// Vidas de arranque del rival (una más en Freezeout).
+// Vidas de arranque del rival (una más en Freezeout, salvo que el rival
+// tenga su propio "freezeoutExtraLives" definido).
 function rivalLivesFor(state, rival) {
-  return rival.lives + (isFreezeout(state) ? FREEZEOUT.extraRivalLives : 0);
+  if (!isFreezeout(state)) return rival.lives;
+  const extra = rival.freezeoutExtraLives !== undefined ? rival.freezeoutExtraLives : FREEZEOUT.extraRivalLives;
+  return rival.lives + extra;
 }
 
 // Golpes que el rival resiste sin perder vida (habilidad de jefe / protección).
@@ -101,7 +109,7 @@ function startRivalEncounter(state) {
   state.rivalLives = rivalLivesFor(state, rival);
   state.winStreak = 0;
   state.resistRemaining = getResistCount(state, rival);
-  state.freeFoldsRemaining = isFreezeout(state) ? FREEZEOUT.freeFolds : 0;
+  state.freeFoldsRemaining = isFreezeout(state) ? (rival.freezeoutFreeFolds !== undefined ? rival.freezeoutFreeFolds : FREEZEOUT.freeFolds) : 0;
   state.rivalLine = { victoryShown: false, defeatShown: false, text: '' };
   dealNewHandForState(state);
 }
@@ -208,6 +216,17 @@ function resolveHand(state, stake, doubled) {
 
     const bonus = streakBonusDamage(state.winStreak);
     state.rivalLives = roundLife(state.rivalLives - (stake + bonus));
+
+    // En Freezeout, cuando la racha bonificada está activa, el jugador
+    // "roba" 1 vida extra al rival además del daño de racha (hasta el
+    // máximo de vidas del modo). Premia jugar agresivo con el stack único.
+    let lifeStolen = false;
+    if (bonus > 0 && isFreezeout(state)) {
+      const before = state.playerLives;
+      state.playerLives = Math.min(playerMaxLives(state), roundLife(state.playerLives + 1));
+      lifeStolen = state.playerLives > before;
+    }
+
     const rivalFelted = state.rivalLives <= 0;
     if (rivalFelted) state.status = 'REWARD';
     else dealNewHandForState(state);
@@ -215,7 +234,7 @@ function resolveHand(state, stake, doubled) {
       ...base,
       label: doubled ? 'YOU TAKE THE POT ×2' : 'YOU TAKE THE POT',
       location: 'player', outcome: 'WIN', rivalFelted,
-      streakBonus: bonus, streakCount: state.winStreak
+      streakBonus: bonus, streakCount: state.winStreak, lifeStolen
     };
   }
 

@@ -400,7 +400,8 @@ function showBattleResult(result) {
 function renderStreakBadge() {
   const badge = document.getElementById('battle-streak');
   if (isStreakActive(gameState)) {
-    badge.textContent = `🔥 Racha ×${gameState.winStreak} — golpe reforzado (+1 corazón)`;
+    const stealNote = isFreezeout(gameState) ? ' + le robas 1 vida' : '';
+    badge.textContent = `🔥 Racha ×${gameState.winStreak} — golpe reforzado (+1 corazón${stealNote})`;
     badge.classList.remove('hidden');
   } else {
     badge.textContent = '';
@@ -421,7 +422,8 @@ function buildComboCaption(result) {
     const total = base + (result.streakBonus || 0);
     const damage = `pierde ${formatLifeNumber(total)} ${total === 1 ? 'vida' : 'vidas'}`;
     const streakNote = result.streakBonus ? ' (+1 por racha)' : '';
-    return `Ganas con ${result.playerHandName}${doubleNote}. ${rival.name} tenía ${result.rivalHandName} y ${damage}${streakNote}.`;
+    const stealNote = result.lifeStolen ? ' ¡Le robas 1 vida!' : '';
+    return `Ganas con ${result.playerHandName}${doubleNote}. ${rival.name} tenía ${result.rivalHandName} y ${damage}${streakNote}.${stealNote}`;
   }
   if (result.outcome === 'LOSE') {
     const damage = result.doubled ? 'Pierdes 2 vidas' : 'Pierdes 1 vida';
@@ -520,6 +522,11 @@ function renderReward() {
   const spinButton = document.getElementById('spin-reward-button');
   spinButton.classList.remove('hidden');
   spinButton.disabled = false;
+
+  // Si el rival derrotado era el último (El Pirulas), lo que sigue es la
+  // pantalla final, no "otra mesa": el botón debe decir simplemente "Continúa".
+  const isLastRival = gameState.currentRivalIndex >= RIVALS.length - 1;
+  document.getElementById('next-table-button').textContent = isLastRival ? 'Continúa' : 'Siguiente mesa';
 
   renderRoadmap('reward-roadmap');
 }

@@ -102,6 +102,13 @@ const RIVALS = [
     // No se especificó premio base para El Pirulas en el encargo (solo del 1 al 5).
     // Se deja en 100.000 EUR como cierre de escalera; ajustar si se quiere otro valor.
     basePrize: 100000,
-    finalBoss: true
+    finalBoss: true,
+    // Ajustes especiales en modo Freezeout (tras feedback de playtesting):
+    // sin vida extra (se queda en sus 5 base, con los 2 seguros intactos),
+    // skill fijado en 50% (en vez del 54% que salía de aplicar el multiplicador
+    // general x1.8), y el doble de folds gratis para compensar lo duro que es.
+    freezeoutExtraLives: 0,
+    freezeoutSkill: 0.50,
+    freezeoutFreeFolds: 2
   }
 ];
