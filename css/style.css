@@ -769,3 +769,88 @@ h2 {
 .life-lost {
   animation: lifeLost 0.5s ease;
 }
+
+/* --- Portada: acceso por contraseña y créditos --- */
+
+.invite-note {
+  color: #f4d976;
+  font-weight: bold;
+  margin: 4px 0 12px;
+  letter-spacing: 0.5px;
+}
+
+.access-input {
+  width: 100%;
+  max-width: 300px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #45404d;
+  background: rgba(14, 13, 18, 0.85);
+  color: #f2e9d8;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.credits {
+  margin-top: 26px;
+  color: #6f6878;
+  font-size: 0.72rem;
+  letter-spacing: 1px;
+  font-style: italic;
+}
+
+/* --- Registro: selección de modo --- */
+
+.mode-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.mode-descriptions {
+  margin-top: 14px;
+  text-align: left;
+  color: #a79c86;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  background: #0e0d12;
+  border: 1px solid #2a2731;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.mode-descriptions p {
+  margin: 0 0 10px;
+}
+
+.mode-descriptions p:last-child {
+  margin-bottom: 0;
+}
+
+.mode-descriptions strong {
+  color: #d4af37;
+}
+
+.demo-note {
+  margin-top: 12px;
+  color: #7fd1ff;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+/* --- Frase dinámica del rival en combate --- */
+
+.rival-line {
+  font-style: italic;
+  color: #ff8a65;
+  font-size: 0.95rem;
+  min-height: 1.1em;
+  margin: 2px 0 0;
+  max-width: 340px;
+}
+
+.rival-line:empty {
+  display: none;
+}

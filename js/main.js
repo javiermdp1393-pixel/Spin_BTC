@@ -195,18 +195,35 @@ function setPortraitElement(el, rival) {
 
 // --- Pantalla: Registro ---
 
+// Contraseñas válidas de acceso al torneo.
+const ACCESS_PASSWORDS = {
+  pirulas: { demo: false },
+  waterpirulasdemo13: { demo: true }
+};
+
 document.getElementById('start-button').addEventListener('click', () => {
+  const pwInput = document.getElementById('access-password');
+  const errorEl = document.getElementById('access-error');
+  const pw = pwInput.value.trim().toLowerCase();
+  const access = ACCESS_PASSWORDS[pw];
+
+  if (!access) {
+    errorEl.textContent = 'Contraseña no válida. Necesitas una invitación.';
+    return;
+  }
+
+  errorEl.textContent = '';
+  gameState.demoMode = access.demo;
+  document.getElementById('demo-note').classList.toggle('hidden', !access.demo);
   gameState.status = 'REGISTER';
   showScreen(gameState.status);
 });
 
-document.getElementById('register-button').addEventListener('click', () => {
-  const nameInput = document.getElementById('player-name');
-  const aliasInput = document.getElementById('player-alias');
+// Valida nombre/apodo y arranca el torneo en el modo elegido.
+function startTournamentFlow(mode) {
+  const name = document.getElementById('player-name').value.trim();
+  const alias = document.getElementById('player-alias').value.trim();
   const errorEl = document.getElementById('register-error');
-
-  const name = nameInput.value.trim();
-  const alias = aliasInput.value.trim();
 
   if (!name || !alias) {
     errorEl.textContent = 'La mesa necesita tu nombre y tu apodo antes de empezar.';
@@ -216,10 +233,14 @@ document.getElementById('register-button').addEventListener('click', () => {
   errorEl.textContent = '';
   gameState.player.name = name;
   gameState.player.alias = alias;
+  startTournament(gameState, mode);
   gameState.status = 'RIVAL_INTRO';
   renderRivalIntro();
   showScreen(gameState.status);
-});
+}
+
+document.getElementById('register-button').addEventListener('click', () => startTournamentFlow('ARCADE'));
+document.getElementById('freezeout-button').addEventListener('click', () => startTournamentFlow('FREEZEOUT'));
 
 // --- Pantalla: Intro de rival ---
 
@@ -228,17 +249,25 @@ function renderRivalIntro() {
   setPortraitElement(document.getElementById('rival-intro-portrait'), rival);
   document.getElementById('rival-intro-name').textContent = rival.name;
   document.getElementById('rival-intro-alias').textContent = rival.alias;
-  document.getElementById('rival-intro-lives').textContent = `Vidas del rival: ${rival.lives}`;
+  document.getElementById('rival-intro-lives').textContent = `Vidas del rival: ${rivalLivesFor(gameState, rival)}`;
 
   const modifierEl = document.getElementById('rival-intro-modifier');
-  if (rival.rivalSkill > 0) {
-    modifierEl.textContent = `Ventaja del rival: mejora su mano en el ${Math.round(rival.rivalSkill * 100)}% de las manos.`;
+  const skill = effectiveRivalSkill(gameState, rival);
+  if (skill > 0) {
+    modifierEl.textContent = `Ventaja del rival: mejora su mano en el ${Math.round(skill * 100)}% de las manos.`;
   } else {
     modifierEl.textContent = '';
   }
 
+  // Protección / habilidad: nº de golpes que aguanta sin perder vida.
   const specialEl = document.getElementById('rival-intro-special');
-  specialEl.textContent = rival.special ? `⚡ ${rival.special}` : '';
+  const resist = getResistCount(gameState, rival);
+  if (resist > 0) {
+    const flavour = rival.special ? rival.special + ' ' : '';
+    specialEl.textContent = `⚡ ${flavour}Aguanta ${resist} ${resist === 1 ? 'golpe' : 'golpes'} sin perder vida.`;
+  } else {
+    specialEl.textContent = '';
+  }
 
   document.getElementById('rival-intro-quote').textContent = `“${rival.introLine}”`;
   renderRoadmap('rival-intro-roadmap');
@@ -261,19 +290,23 @@ function renderBattle() {
   setPortraitElement(document.getElementById('battle-rival-portrait'), rival);
   document.getElementById('battle-rival-name').textContent = rival.name;
   document.getElementById('battle-rival-alias').textContent = rival.alias;
-  document.getElementById('battle-rival-lives').innerHTML = renderLivesHearts(gameState.rivalLives, rival.lives);
+  document.getElementById('battle-rival-lives').innerHTML = renderLivesHearts(gameState.rivalLives, rivalLivesFor(gameState, rival));
   document.getElementById('battle-rival-result-message').textContent = '';
   renderHiddenCardRow('battle-rival-cards', 2);
   document.getElementById('battle-reveal-caption').textContent = '';
 
   document.getElementById('battle-player-name').textContent = `${gameState.player.name} "${gameState.player.alias}"`;
-  document.getElementById('battle-player-lives').innerHTML = renderLivesHearts(gameState.playerLives, PLAYER_STARTING_LIVES);
+  document.getElementById('battle-player-lives').innerHTML = renderLivesHearts(gameState.playerLives, playerMaxLives(gameState));
   renderCardRow('battle-player-cards', hand.playerCards, true);
   renderCommunityCards(hand.communityCards, true);
   Sound.playDeal();
 
+  // El rival puede soltar una frase si está cerca de perder o de ganar.
+  maybeTriggerRivalLine(gameState);
+  document.getElementById('battle-rival-line').textContent = gameState.rivalLine.text ? `“${gameState.rivalLine.text}”` : '';
+
   const winPercent = Math.round(hand.winChance * 100);
-  const detailText = getOddsDetailText(hand.winChance, hand.playerHandName, rival.rivalSkill);
+  const detailText = getOddsDetailText(hand.winChance, hand.playerHandName, effectiveRivalSkill(gameState, rival));
   document.getElementById('battle-odds-label').textContent = `${hand.oddsLabel} · ${winPercent}%`;
   document.getElementById('battle-odds-label').title = detailText;
   document.getElementById('battle-odds-detail').textContent = detailText;
@@ -296,6 +329,17 @@ function renderBattle() {
     doubleButton.disabled = true;
     doubleHint.textContent = 'Necesitas 2 vidas o más para Doblar.';
   }
+
+  // Aviso de fold gratis (modo Freezeout).
+  const foldButton = document.getElementById('fold-button');
+  const freefoldHint = document.getElementById('freefold-hint');
+  if (gameState.freeFoldsRemaining > 0) {
+    foldButton.textContent = 'FOLD ✦';
+    freefoldHint.textContent = `Tienes ${gameState.freeFoldsRemaining} fold gratis contra este rival.`;
+  } else {
+    foldButton.textContent = 'FOLD';
+    freefoldHint.textContent = '';
+  }
 }
 
 document.getElementById('battle-odds-label').addEventListener('click', () => {
@@ -306,8 +350,8 @@ document.getElementById('battle-odds-label').addEventListener('click', () => {
 // que el coste de un fold o el resultado de un push se vean al instante.
 function refreshLivesDisplay() {
   const rival = getCurrentRival(gameState);
-  document.getElementById('battle-rival-lives').innerHTML = renderLivesHearts(Math.max(0, gameState.rivalLives), rival.lives);
-  document.getElementById('battle-player-lives').innerHTML = renderLivesHearts(Math.max(0, gameState.playerLives), PLAYER_STARTING_LIVES);
+  document.getElementById('battle-rival-lives').innerHTML = renderLivesHearts(Math.max(0, gameState.rivalLives), rivalLivesFor(gameState, rival));
+  document.getElementById('battle-player-lives').innerHTML = renderLivesHearts(Math.max(0, gameState.playerLives), playerMaxLives(gameState));
 }
 
 function showBattleResult(result) {
@@ -330,7 +374,7 @@ function showBattleResult(result) {
     if (!result.bossResisted) flashLifeLoss('battle-rival-lives');
     Sound.playWin();
   } else if (result.outcome === 'FOLD') {
-    flashLifeLoss('battle-player-lives');
+    if (!result.freeFold) flashLifeLoss('battle-player-lives'); // el fold gratis no cuesta vida
     Sound.playFold();
   }
 
@@ -345,6 +389,7 @@ function showBattleResult(result) {
   document.getElementById('fold-button').classList.add('hidden');
   document.getElementById('double-button').classList.add('hidden');
   document.getElementById('double-hint').textContent = '';
+  document.getElementById('freefold-hint').textContent = '';
 
   // El juego nunca avanza solo: siempre espera a que el jugador pulse
   // Continuar, tanto si sigue el combate como si terminó (recompensa/bust).
@@ -355,9 +400,7 @@ function showBattleResult(result) {
 function renderStreakBadge() {
   const badge = document.getElementById('battle-streak');
   if (isStreakActive(gameState)) {
-    const bonus = streakBonusDamage(gameState.winStreak);
-    const bonusText = bonus >= 1 ? '+1 corazón' : '+½ corazón';
-    badge.textContent = `🔥 Racha ×${gameState.winStreak} — golpe reforzado (${bonusText})`;
+    badge.textContent = `🔥 Racha ×${gameState.winStreak} — golpe reforzado (+1 corazón)`;
     badge.classList.remove('hidden');
   } else {
     badge.textContent = '';
@@ -377,7 +420,7 @@ function buildComboCaption(result) {
     const base = result.doubled ? 2 : 1;
     const total = base + (result.streakBonus || 0);
     const damage = `pierde ${formatLifeNumber(total)} ${total === 1 ? 'vida' : 'vidas'}`;
-    const streakNote = result.streakBonus ? ` (+${result.streakBonus >= 1 ? '1' : '½'} por racha)` : '';
+    const streakNote = result.streakBonus ? ' (+1 por racha)' : '';
     return `Ganas con ${result.playerHandName}${doubleNote}. ${rival.name} tenía ${result.rivalHandName} y ${damage}${streakNote}.`;
   }
   if (result.outcome === 'LOSE') {
@@ -489,7 +532,7 @@ document.getElementById('spin-reward-button').addEventListener('click', () => {
   const reelValue = document.getElementById('reward-reel-value');
   reelContainer.classList.remove('hidden');
 
-  const possibleMultipliers = [2, 3, 4, 5, 6, 7, 8, 9, 10, 1000];
+  const possibleMultipliers = [2, 3, 4, 5, 6, 7, 8, 9, 10, 50, 100, 200, 1000];
   let ticks = 0;
   const totalTicks = 16;
 
@@ -516,12 +559,22 @@ function revealRewardBreakdown() {
   document.getElementById('reward-multiplier').textContent = `x${pendingReward.multiplier}`;
   document.getElementById('reward-amount').textContent = formatEuros(pendingReward.amount);
   document.getElementById('reward-total').textContent = formatEuros(gameState.totalPrize);
-  document.getElementById('reward-jackpot-banner').classList.toggle('hidden', pendingReward.type !== 'JACKPOT');
+
+  const banner = document.getElementById('reward-jackpot-banner');
+  if (pendingReward.type === 'JACKPOT') {
+    banner.textContent = '¡JACKPOT!';
+    banner.classList.remove('hidden');
+  } else if (pendingReward.type === 'MEGA') {
+    banner.textContent = '¡PELOTAZO!';
+    banner.classList.remove('hidden');
+  } else {
+    banner.classList.add('hidden');
+  }
 
   document.getElementById('reward-box').classList.remove('hidden');
   document.getElementById('next-table-button').classList.remove('hidden');
 
-  if (pendingReward.type === 'JACKPOT') Sound.playJackpot();
+  if (pendingReward.type === 'JACKPOT' || pendingReward.type === 'MEGA') Sound.playJackpot();
   else Sound.playReward();
 }
 
