@@ -321,6 +321,18 @@ h2 {
   min-height: 102px;
 }
 
+/* Mesa: 5 comunitarias en dos filas (3 + 2). */
+.community-cards {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+}
+
+.community-cards .card-row {
+  min-height: 0;
+}
+
 .reveal-caption {
   font-style: italic;
   color: #a79c86;
@@ -616,4 +628,144 @@ h2 {
 .leaderboard-list li.current-run .leaderboard-name,
 .leaderboard-list li.current-run .leaderboard-amount {
   color: #f4d976;
+}
+
+/* --- Botón de silencio --- */
+
+.mute-button {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 50;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid #45404d;
+  background: rgba(14, 13, 18, 0.8);
+  color: #f2e9d8;
+  font-size: 1.2rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+/* --- Habilidad especial del rival (intro) --- */
+
+.special-text {
+  color: #f4d976;
+  font-size: 0.9rem;
+  background: rgba(244, 217, 118, 0.08);
+  border: 1px solid rgba(244, 217, 118, 0.3);
+  border-radius: 8px;
+  padding: 8px 10px;
+  min-height: 0;
+}
+
+.special-text:empty {
+  display: none;
+}
+
+/* --- Insignia de racha --- */
+
+.streak-badge {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #f0871f, #b0430a);
+  color: #fff6ec;
+  font-weight: bold;
+  font-size: 0.85rem;
+  box-shadow: 0 0 12px rgba(240, 135, 31, 0.5);
+  animation: pulse 0.7s infinite alternate;
+}
+
+/* --- Roadmap / bracket del torneo --- */
+
+.roadmap {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  overflow-x: auto;
+  padding: 10px 2px;
+  margin: 14px 0 6px;
+}
+
+.roadmap-node {
+  flex: 0 0 auto;
+  width: 52px;
+  text-align: center;
+  opacity: 0.85;
+}
+
+.roadmap-icon {
+  width: 42px;
+  height: 42px;
+  margin: 0 auto 4px;
+  border-radius: 8px;
+  background-color: #1f1c26;
+  background-size: cover;
+  background-position: center top;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  border: 2px solid #35313d;
+}
+
+.roadmap-node.hidden-rival .roadmap-icon {
+  color: #6f6878;
+  background: repeating-linear-gradient(45deg, #17151d, #17151d 5px, #201d27 5px, #201d27 10px);
+}
+
+.roadmap-node.defeated {
+  opacity: 0.5;
+}
+
+.roadmap-node.defeated .roadmap-icon {
+  filter: grayscale(0.7);
+  border-color: #2a2731;
+}
+
+.roadmap-node.current .roadmap-icon {
+  border-color: #d4af37;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.6);
+}
+
+.roadmap-node.boss .roadmap-icon {
+  border-color: #c62b3f;
+}
+
+.roadmap-label {
+  font-size: 0.55rem;
+  line-height: 1.1;
+  color: #cfc4a8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* --- Animaciones: reparto de cartas y pérdida de vida --- */
+
+@keyframes dealIn {
+  from { opacity: 0; transform: translateY(-20px) scale(0.9); }
+  to { opacity: 1; transform: none; }
+}
+
+.card--deal {
+  animation: dealIn 0.34s ease both;
+}
+
+@keyframes lifeLost {
+  0% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+  100% { transform: translateX(0); }
+}
+
+.life-lost {
+  animation: lifeLost 0.5s ease;
 }

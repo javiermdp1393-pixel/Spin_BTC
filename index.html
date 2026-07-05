@@ -8,6 +8,9 @@
 </head>
 <body>
 
+<!-- Botón de silencio (persistente en todas las pantallas) -->
+<button id="mute-button" class="mute-button" type="button" aria-label="Silenciar sonido">🔊</button>
+
 <!-- 1. PORTADA -->
 <section id="launch-screen" class="screen active">
   <div class="hero-bg" style="background-image: url('assets/cover.jpg');"></div>
@@ -41,7 +44,9 @@
     <p id="rival-intro-alias" class="alias"></p>
     <p id="rival-intro-lives" class="lives-label"></p>
     <p id="rival-intro-modifier" class="modifier-text"></p>
+    <p id="rival-intro-special" class="special-text"></p>
     <p id="rival-intro-quote" class="quote"></p>
+    <div id="rival-intro-roadmap" class="roadmap"></div>
     <button id="rival-intro-button" class="btn btn-primary">Sentarse a la mesa</button>
   </div>
 </section>
@@ -64,9 +69,10 @@
 
     <div class="table-zone">
       <p class="zone-label">Mesa</p>
-      <div id="battle-community-cards" class="card-row"></div>
+      <div id="battle-community-cards" class="community-cards"></div>
       <button id="battle-odds-label" class="odds-label" type="button"></button>
       <p id="battle-odds-detail" class="odds-detail hidden"></p>
+      <p id="battle-streak" class="streak-badge hidden"></p>
       <p id="battle-result-message" class="result-message"></p>
     </div>
 
@@ -81,7 +87,7 @@
           <button id="push-button" class="btn btn-primary">CALL</button>
           <button id="fold-button" class="btn btn-danger">FOLD</button>
         </div>
-        <button id="double-button" class="btn btn-risk">Doblar</button>
+        <button id="double-button" class="btn btn-risk">DOBLAR</button>
         <button id="continue-button" class="btn btn-primary hidden">Continuar</button>
       </div>
       <p id="double-hint" class="double-hint"></p>
@@ -109,6 +115,8 @@
       <p class="reward-amount">Ganancia de la ronda: <span id="reward-amount"></span></p>
       <p class="total-prize">Premio acumulado: <span id="reward-total"></span></p>
     </div>
+
+    <div id="reward-roadmap" class="roadmap"></div>
 
     <button id="next-table-button" class="btn btn-primary hidden">Next Table</button>
   </div>
@@ -145,6 +153,7 @@
 <script src="js/odds.js"></script>
 <script src="js/rewards.js"></script>
 <script src="js/leaderboard.js"></script>
+<script src="js/sound.js"></script>
 <script src="js/state.js"></script>
 <script src="js/main.js"></script>
 </body>

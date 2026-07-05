@@ -84,6 +84,9 @@ const RIVALS = [
     defeatLine: 'Ninguna mesa me había visto caer... hasta esta noche. La corona de Espinho ya es tuya, campeón.',
     lives: 5,
     rivalSkill: 0.30,
+    // Habilidad especial del jefe final: la primera mano que le ganas la
+    // aguanta sin perder vida. Se muestra en su pantalla de presentación.
+    special: 'Segunda vida del campeón: la primera mano que le ganes, la resiste sin perder ni medio corazón.',
     // No se especificó premio base para El Pirulas en el encargo (solo del 1 al 5).
     // Se deja en 100.000 EUR como cierre de escalera; ajustar si se quiere otro valor.
     basePrize: 100000,

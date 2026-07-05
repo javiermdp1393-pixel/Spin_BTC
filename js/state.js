@@ -4,6 +4,11 @@
 const PLAYER_STARTING_LIVES = 3;
 const FOLD_LIFE_COST = 1 / 4;
 
+// Racha: a partir de 2 manos ganadas seguidas, cada victoria hace medio
+// corazón de daño extra al rival.
+const STREAK_ACTIVE_THRESHOLD = 2;
+const STREAK_BONUS_DAMAGE = 0.5;
+
 function createInitialState() {
   return {
     status: 'LAUNCH', // LAUNCH, REGISTER, RIVAL_INTRO, BATTLE, REWARD, BUST_OUT, FINAL
@@ -12,8 +17,14 @@ function createInitialState() {
     playerLives: PLAYER_STARTING_LIVES,
     rivalLives: 0,
     totalPrize: 0,
+    winStreak: 0, // manos ganadas seguidas en el combate actual
+    bossResistUsed: false, // habilidad de El Pirulas (resiste el primer golpe)
     currentHand: null // { playerCards, communityCards, winChance, oddsLabel, playerHandName }
   };
+}
+
+function isStreakActive(state) {
+  return state.winStreak >= STREAK_ACTIVE_THRESHOLD;
 }
 
 function getCurrentRival(state) {
@@ -32,6 +43,8 @@ function startRivalEncounter(state) {
   const rival = getCurrentRival(state);
   state.playerLives = PLAYER_STARTING_LIVES;
   state.rivalLives = rival.lives;
+  state.winStreak = 0;
+  state.bossResistUsed = false;
   dealNewHandForState(state);
 }
 
@@ -51,8 +64,9 @@ function dealNewHandForState(state) {
   };
 }
 
-// Foldear cuesta 1/3 de vida y reparte mano nueva si el jugador sigue vivo.
+// Foldear cuesta 1/4 de vida, rompe la racha y reparte mano nueva.
 function applyFold(state) {
+  state.winStreak = 0;
   state.playerLives = roundLife(state.playerLives - FOLD_LIFE_COST);
 
   if (state.playerLives <= 0) {
@@ -64,49 +78,10 @@ function applyFold(state) {
   return { label: 'HAND FOLDED', location: 'player', outcome: 'FOLD' };
 }
 
-// Resuelve un push como un showdown real: gana la mejor combinación de 5
-// cartas. Devuelve las cartas reales del rival (que ya se pueden mostrar) y
-// las categorías de ambas manos para la UI.
-function applyPush(state) {
-  const rival = getCurrentRival(state);
-  const hand = state.currentHand;
-  const showdown = resolveShowdown(hand.playerCards, hand.communityCards, rival.rivalSkill);
-
-  const base = {
-    revealCards: showdown.rivalCards,
-    playerHandName: showdown.playerHandName,
-    rivalHandName: showdown.rivalHandName
-  };
-
-  // Empate: se reparte mano nueva sin coste de vidas (regla del MVP).
-  if (showdown.cmp === 0) {
-    dealNewHandForState(state);
-    return { ...base, label: 'SPLIT POT', location: 'player', outcome: 'TIE' };
-  }
-
-  if (showdown.cmp > 0) {
-    state.rivalLives -= 1;
-    const rivalFelted = state.rivalLives <= 0;
-    if (rivalFelted) state.status = 'REWARD';
-    else dealNewHandForState(state);
-    return { ...base, label: 'YOU TAKE THE POT', location: 'player', outcome: 'WIN', rivalFelted };
-  }
-
-  state.playerLives = roundLife(state.playerLives - 1);
-  const bustOut = state.playerLives <= 0;
-  if (bustOut) state.status = 'BUST_OUT';
-  else dealNewHandForState(state);
-  return { ...base, label: 'VILLAIN TAKES THE POT', location: 'rival', outcome: 'LOSE', bustOut };
-}
-
-// Solo se puede doblar con 2 vidas o más (regla del juego).
-function canDouble(state) {
-  return state.playerLives >= 2 - 1e-9;
-}
-
-// Doblar: mismo showdown que un push pero con el doble en juego. Ganar quita
-// 2 vidas al rival; perder quita 2 al jugador. Empate se repite sin coste.
-function applyDouble(state) {
+// Resolución común de una mano jugada (CALL o Doblar). "stake" son las vidas
+// en juego (1 normal, 2 al doblar). Aplica racha (daño extra) y la habilidad
+// de resistencia de El Pirulas.
+function resolveHand(state, stake, doubled) {
   const rival = getCurrentRival(state);
   const hand = state.currentHand;
   const showdown = resolveShowdown(hand.playerCards, hand.communityCards, rival.rivalSkill);
@@ -115,27 +90,65 @@ function applyDouble(state) {
     revealCards: showdown.rivalCards,
     playerHandName: showdown.playerHandName,
     rivalHandName: showdown.rivalHandName,
-    doubled: true
+    doubled
   };
 
+  // Empate: se reparte mano nueva sin coste de vidas y sin romper la racha.
   if (showdown.cmp === 0) {
     dealNewHandForState(state);
     return { ...base, label: 'SPLIT POT', location: 'player', outcome: 'TIE' };
   }
 
+  // Victoria del jugador.
   if (showdown.cmp > 0) {
-    state.rivalLives -= 2;
+    state.winStreak += 1;
+
+    // El Pirulas resiste el primer golpe: cuenta como mano ganada (mantiene
+    // la racha) pero no pierde vida.
+    if (rival.finalBoss && !state.bossResistUsed) {
+      state.bossResistUsed = true;
+      dealNewHandForState(state);
+      return { ...base, label: 'EL PIRULAS RESISTE', location: 'player', outcome: 'WIN', rivalFelted: false, bossResisted: true };
+    }
+
+    const bonus = isStreakActive(state) ? STREAK_BONUS_DAMAGE : 0;
+    state.rivalLives = roundLife(state.rivalLives - (stake + bonus));
     const rivalFelted = state.rivalLives <= 0;
     if (rivalFelted) state.status = 'REWARD';
     else dealNewHandForState(state);
-    return { ...base, label: 'YOU TAKE THE POT ×2', location: 'player', outcome: 'WIN', rivalFelted };
+    return {
+      ...base,
+      label: doubled ? 'YOU TAKE THE POT ×2' : 'YOU TAKE THE POT',
+      location: 'player', outcome: 'WIN', rivalFelted,
+      streakBonus: bonus, streakCount: state.winStreak
+    };
   }
 
-  state.playerLives = roundLife(state.playerLives - 2);
+  // Derrota del jugador: rompe la racha.
+  state.winStreak = 0;
+  state.playerLives = roundLife(state.playerLives - stake);
   const bustOut = state.playerLives <= 0;
   if (bustOut) state.status = 'BUST_OUT';
   else dealNewHandForState(state);
-  return { ...base, label: 'VILLAIN TAKES THE POT ×2', location: 'rival', outcome: 'LOSE', bustOut };
+  return {
+    ...base,
+    label: doubled ? 'VILLAIN TAKES THE POT ×2' : 'VILLAIN TAKES THE POT',
+    location: 'rival', outcome: 'LOSE', bustOut
+  };
+}
+
+function applyPush(state) {
+  return resolveHand(state, 1, false);
+}
+
+// Solo se puede doblar con 2 vidas o más (regla del juego).
+function canDouble(state) {
+  return state.playerLives >= 2 - 1e-9;
+}
+
+// Doblar: mismo showdown con el doble en juego (2 vidas).
+function applyDouble(state) {
+  return resolveHand(state, 2, true);
 }
 
 // Aplica el premio del rival derrotado (premio base propio x multiplicador)

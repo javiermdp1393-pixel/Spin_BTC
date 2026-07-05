@@ -85,16 +85,55 @@ function createCardBackElement() {
   return el;
 }
 
-function renderCardRow(containerId, cards) {
+function renderCardRow(containerId, cards, animate) {
   const container = document.getElementById(containerId);
   container.innerHTML = '';
-  cards.forEach((card) => container.appendChild(createCardElement(card)));
+  cards.forEach((card, i) => {
+    const el = createCardElement(card);
+    if (animate) applyDealAnimation(el, i);
+    container.appendChild(el);
+  });
+}
+
+// Reparte las 5 comunitarias en dos filas (3 arriba, 2 abajo) para que no
+// quede una carta suelta en pantallas estrechas.
+function renderCommunityCards(cards, animate) {
+  const container = document.getElementById('battle-community-cards');
+  container.innerHTML = '';
+  const rows = [cards.slice(0, 3), cards.slice(3, 5)];
+  let dealIndex = 0;
+  rows.forEach((rowCards) => {
+    const row = document.createElement('div');
+    row.className = 'card-row';
+    rowCards.forEach((card) => {
+      const el = createCardElement(card);
+      if (animate) applyDealAnimation(el, dealIndex);
+      dealIndex++;
+      row.appendChild(el);
+    });
+    container.appendChild(row);
+  });
+}
+
+// Animación de "reparto": la carta cae con un pequeño retardo escalonado.
+function applyDealAnimation(cardEl, index) {
+  cardEl.classList.add('card--deal');
+  cardEl.style.animationDelay = `${index * 55}ms`;
 }
 
 function renderHiddenCardRow(containerId, count) {
   const container = document.getElementById(containerId);
   container.innerHTML = '';
   for (let i = 0; i < count; i++) container.appendChild(createCardBackElement());
+}
+
+// Sacude/parpadea la fila de vidas indicada (feedback de pérdida de vida).
+function flashLifeLoss(elementId) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  el.classList.remove('life-lost');
+  void el.offsetWidth; // reinicia la animación
+  el.classList.add('life-lost');
 }
 
 // Da formato a un número de vidas que solo puede tener fracciones de 1/4
@@ -198,7 +237,11 @@ function renderRivalIntro() {
     modifierEl.textContent = '';
   }
 
+  const specialEl = document.getElementById('rival-intro-special');
+  specialEl.textContent = rival.special ? `⚡ ${rival.special}` : '';
+
   document.getElementById('rival-intro-quote').textContent = `“${rival.introLine}”`;
+  renderRoadmap('rival-intro-roadmap');
 }
 
 document.getElementById('rival-intro-button').addEventListener('click', () => {
@@ -224,8 +267,9 @@ function renderBattle() {
 
   document.getElementById('battle-player-name').textContent = `${gameState.player.name} "${gameState.player.alias}"`;
   document.getElementById('battle-player-lives').innerHTML = renderLivesHearts(gameState.playerLives, PLAYER_STARTING_LIVES);
-  renderCardRow('battle-player-cards', hand.playerCards);
-  renderCardRow('battle-community-cards', hand.communityCards);
+  renderCardRow('battle-player-cards', hand.playerCards, true);
+  renderCommunityCards(hand.communityCards, true);
+  Sound.playDeal();
 
   const winPercent = Math.round(hand.winChance * 100);
   const detailText = getOddsDetailText(hand.winChance, hand.playerHandName, rival.rivalSkill);
@@ -234,6 +278,7 @@ function renderBattle() {
   document.getElementById('battle-odds-detail').textContent = detailText;
   document.getElementById('battle-odds-detail').classList.add('hidden');
   document.getElementById('battle-result-message').textContent = '';
+  renderStreakBadge();
 
   document.getElementById('push-button').classList.remove('hidden');
   document.getElementById('fold-button').classList.remove('hidden');
@@ -266,6 +311,7 @@ function refreshLivesDisplay() {
 
 function showBattleResult(result) {
   refreshLivesDisplay();
+  renderStreakBadge();
   document.getElementById('battle-result-message').textContent = '';
   document.getElementById('battle-rival-result-message').textContent = '';
 
@@ -275,10 +321,22 @@ function showBattleResult(result) {
     document.getElementById('battle-result-message').textContent = result.label;
   }
 
+  // Feedback de vida perdida + sonido según el resultado.
+  if (result.outcome === 'LOSE') {
+    flashLifeLoss('battle-player-lives');
+    Sound.playLose();
+  } else if (result.outcome === 'WIN') {
+    if (!result.bossResisted) flashLifeLoss('battle-rival-lives');
+    Sound.playWin();
+  } else if (result.outcome === 'FOLD') {
+    flashLifeLoss('battle-player-lives');
+    Sound.playFold();
+  }
+
   // Tras un push se muestran las cartas reales del rival y qué combinación
   // ganó, para que el resultado sea legible como una mano de póker.
   if (result.revealCards) {
-    renderCardRow('battle-rival-cards', result.revealCards);
+    renderCardRow('battle-rival-cards', result.revealCards, true);
     document.getElementById('battle-reveal-caption').textContent = buildComboCaption(result);
   }
 
@@ -292,14 +350,32 @@ function showBattleResult(result) {
   document.getElementById('continue-button').classList.remove('hidden');
 }
 
+// Muestra la insignia de racha cuando está activa (2+ victorias seguidas).
+function renderStreakBadge() {
+  const badge = document.getElementById('battle-streak');
+  if (isStreakActive(gameState)) {
+    badge.textContent = `🔥 Racha ×${gameState.winStreak} — golpe reforzado (+½ corazón)`;
+    badge.classList.remove('hidden');
+  } else {
+    badge.textContent = '';
+    badge.classList.add('hidden');
+  }
+}
+
 // Frase que explica qué combinación decidió la mano.
 function buildComboCaption(result) {
   const rival = getCurrentRival(gameState);
   const doubleNote = result.doubled ? ' (jugada doble)' : '';
 
+  if (result.bossResisted) {
+    return `¡${rival.name} resiste el golpe! Ganas con ${result.playerHandName} pero el campeón no pierde vida esta vez.`;
+  }
   if (result.outcome === 'WIN') {
-    const damage = result.doubled ? 'pierde 2 vidas' : 'pierde 1 vida';
-    return `Ganas con ${result.playerHandName}${doubleNote}. ${rival.name} tenía ${result.rivalHandName} y ${damage}.`;
+    const base = result.doubled ? 2 : 1;
+    const total = base + (result.streakBonus || 0);
+    const damage = `pierde ${formatLifeNumber(total)} ${total === 1 ? 'vida' : 'vidas'}`;
+    const streakNote = result.streakBonus ? ' (+½ por racha)' : '';
+    return `Ganas con ${result.playerHandName}${doubleNote}. ${rival.name} tenía ${result.rivalHandName} y ${damage}${streakNote}.`;
   }
   if (result.outcome === 'LOSE') {
     const damage = result.doubled ? 'Pierdes 2 vidas' : 'Pierdes 1 vida';
@@ -311,6 +387,48 @@ function buildComboCaption(result) {
   return '';
 }
 
+// --- Roadmap / bracket del torneo ---
+// Muestra la escalera de rivales: los ya derrotados y el actual con su
+// nombre, el jefe final siempre visible, y los futuros ocultos ("???").
+function renderRoadmap(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = '';
+
+  RIVALS.forEach((rival, index) => {
+    const node = document.createElement('div');
+    node.className = 'roadmap-node';
+
+    const defeated = index < gameState.currentRivalIndex;
+    const current = index === gameState.currentRivalIndex;
+    // Se revela el nombre de: derrotados, el actual y siempre el jefe final.
+    const revealed = defeated || current || rival.finalBoss;
+
+    if (defeated) node.classList.add('defeated');
+    if (current) node.classList.add('current');
+    if (rival.finalBoss) node.classList.add('boss');
+
+    const icon = document.createElement('div');
+    icon.className = 'roadmap-icon';
+    if (revealed && rival.image) {
+      icon.style.backgroundImage = `url('${rival.image}')`;
+    } else if (revealed) {
+      icon.textContent = rival.suitSymbol;
+    } else {
+      icon.textContent = '?';
+      node.classList.add('hidden-rival');
+    }
+
+    const label = document.createElement('div');
+    label.className = 'roadmap-label';
+    label.textContent = revealed ? (rival.finalBoss ? '👑 ' + rival.name : rival.name) : '???';
+
+    node.appendChild(icon);
+    node.appendChild(label);
+    container.appendChild(node);
+  });
+}
+
 document.getElementById('push-button').addEventListener('click', () => {
   const result = applyPush(gameState);
   showBattleResult(result);
@@ -318,6 +436,7 @@ document.getElementById('push-button').addEventListener('click', () => {
 
 document.getElementById('double-button').addEventListener('click', () => {
   if (!canDouble(gameState)) return;
+  Sound.playDouble();
   const result = applyDouble(gameState);
   showBattleResult(result);
 });
@@ -355,6 +474,8 @@ function renderReward() {
   const spinButton = document.getElementById('spin-reward-button');
   spinButton.classList.remove('hidden');
   spinButton.disabled = false;
+
+  renderRoadmap('reward-roadmap');
 }
 
 document.getElementById('spin-reward-button').addEventListener('click', () => {
@@ -394,6 +515,9 @@ function revealRewardBreakdown() {
 
   document.getElementById('reward-box').classList.remove('hidden');
   document.getElementById('next-table-button').classList.remove('hidden');
+
+  if (pendingReward.type === 'JACKPOT') Sound.playJackpot();
+  else Sound.playReward();
 }
 
 document.getElementById('next-table-button').addEventListener('click', () => {
@@ -423,6 +547,7 @@ document.getElementById('retry-button').addEventListener('click', () => {
 function renderFinal() {
   setPortraitElement(document.getElementById('final-portrait'), { image: 'assets/champion.jpg', name: 'Campeón', suit: 'champion', suitSymbol: '👑' });
   document.getElementById('final-total').textContent = formatEuros(gameState.totalPrize);
+  Sound.playChampion();
 
   const runEntry = {
     name: gameState.player.name,
@@ -451,3 +576,32 @@ function renderLeaderboardList(leaderboard, currentRunEntry) {
   const isNewRecord = leaderboard[0] === currentRunEntry && leaderboard.length > 0;
   document.getElementById('final-new-record').classList.toggle('hidden', !isNewRecord);
 }
+
+// --- Sonido: arranque y botón de silencio ---
+
+// La música ambiente de casino arranca en el primer gesto del usuario (los
+// navegadores bloquean el audio automático). Basta con tocar la pantalla.
+function enableAudioOnce() {
+  Sound.init();
+  if (!Sound.isMuted()) Sound.startAmbient();
+  document.removeEventListener('pointerdown', enableAudioOnce);
+}
+document.addEventListener('pointerdown', enableAudioOnce);
+
+document.getElementById('start-button').addEventListener('click', () => {
+  Sound.init();
+  if (!Sound.isMuted()) Sound.startAmbient();
+});
+
+const muteButton = document.getElementById('mute-button');
+function refreshMuteButton() {
+  muteButton.textContent = Sound.isMuted() ? '🔇' : '🔊';
+  muteButton.setAttribute('aria-label', Sound.isMuted() ? 'Activar sonido' : 'Silenciar sonido');
+}
+muteButton.addEventListener('click', () => {
+  Sound.init();
+  Sound.setMuted(!Sound.isMuted());
+  if (!Sound.isMuted()) Sound.startAmbient();
+  refreshMuteButton();
+});
+refreshMuteButton();
