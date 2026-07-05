@@ -18,9 +18,8 @@ const RIVALS = [
     introLine: 'I swear I had a feeling...',
     defeatLine: 'Vale... quizá soy más fish que pro.',
     lives: 1,
-    // PLACEHOLDER: sustituir por DynamicLines.md
-    nearDefeatLines: ['Vale... esto pinta mal para el pececito.', '¡No, mi torneo no puede acabar tan pronto!', '¡Solo me queda una ficha, glub!'],
-    nearVictoryLines: ['¿El novato ya tiembla? Glub glub.', 'Hasta un pez chico puede morder.'],
+    nearDefeatLines: ['Espera... ¿eso era buena mano?', 'Me está entrando agua en las odds...', 'Creo que esta vez el fish soy yo.'],
+    nearVictoryLines: ['¡Ey! Igual no era tan fish como parecía.', 'Te veo nervioso... ¿foldeamos o qué?', 'Una mano más y te mando al acuario.'],
     rivalSkill: 0,
     basePrize: 15000
   },
@@ -34,9 +33,8 @@ const RIVALS = [
     introLine: 'Cuando me hincho, mejor foldear.',
     defeatLine: 'Se me ha pinchado el farol...',
     lives: 2,
-    // PLACEHOLDER: sustituir por DynamicLines.md
-    nearDefeatLines: ['Se me está deshinchando el farol...', '¡Que alguien me traiga aire!', 'El globo hace pfff...'],
-    nearVictoryLines: ['Cuando yo me hincho, tú te encoges.', 'Este bubble te va a estallar en la cara.'],
+    nearDefeatLines: ['No puede ser... me estoy desinflando.', 'La burbuja me acaba de explotar en la cara.', 'Vale, vale... quizá me he hinchado demasiado.'],
+    nearVictoryLines: ['Estoy a punto de reventar esta mesa.', 'Presión máxima. Bienvenido a la burbuja.', 'Una decisión mala más y haces pop.'],
     rivalSkill: 0.08,
     basePrize: 25000
   },
@@ -50,9 +48,8 @@ const RIVALS = [
     introLine: 'Ocho manos, un solo tell. Intenta encontrarlo.',
     defeatLine: 'Ocho manos... y ninguna salvación.',
     lives: 3,
-    // PLACEHOLDER: sustituir por DynamicLines.md
-    nearDefeatLines: ['Ocho manos... y ninguna me salva.', 'Mis tentáculos empiezan a temblar.', 'Se me escapa el control.'],
-    nearVictoryLines: ['Ocho manos contra las tuyas. Adivina.', 'Controlo cada carta de esta mesa.'],
+    nearDefeatLines: ['Ocho manos... y ninguna salida.', 'Este diamante empieza a agrietarse.', 'No puede ser. He perdido el tell.'],
+    nearVictoryLines: ['Tengo ocho formas distintas de ganarte.', 'Cada carta que ves ya la había calculado.', 'Tu mano tiembla. Mis tentáculos no.'],
     rivalSkill: 0.14,
     basePrize: 42500
   },
@@ -66,9 +63,8 @@ const RIVALS = [
     introLine: 'Yo no persigo manos. Cazo rivers.',
     defeatLine: 'El river hoy no tenía dientes.',
     lives: 3,
-    // PLACEHOLDER: sustituir por DynamicLines.md
-    nearDefeatLines: ['El river se me escapa entre los dientes...', 'Hoy el depredador sangra.', 'Aguas turbias para mí.'],
-    nearVictoryLines: ['Huelo tu sangre en el fieltro.', 'No persigo manos: te cazo a ti.'],
+    nearDefeatLines: ['El river... me ha traicionado.', 'No sangro. Solo espero la siguiente mano.', 'Un tiburón herido sigue mordiendo.'],
+    nearVictoryLines: ['Huele a bust out.', 'Estás nadando demasiado lejos de la orilla.', 'En el river no se juega. Se sobrevive.'],
     rivalSkill: 0.19,
     basePrize: 63000
   },
@@ -82,9 +78,8 @@ const RIVALS = [
     introLine: 'No rompo corazones, rompo tus odds.',
     defeatLine: 'Me has roto el corazón... y el stack.',
     lives: 4,
-    // PLACEHOLDER: sustituir por DynamicLines.md
-    nearDefeatLines: ['Me has roto el corazón antes de tiempo...', 'El galán se retira herido.', 'Mi encanto ya no basta.'],
-    nearVictoryLines: ['Rompo corazones y stacks, guapo.', 'Esta mano te la voy a partir en dos.'],
+    nearDefeatLines: ['Cuidado... aún puedo romperte el corazón.', 'No esperaba que tus odds fueran tan elegantes.', 'Mi corazón sigue latiendo. Tu stack, no sé.'],
+    nearVictoryLines: ['Qué pena. Empezabas a caerme bien.', 'Voy a ganarte con estilo, como debe ser.', 'Esto no es una derrota. Es una ruptura.'],
     rivalSkill: 0.25,
     basePrize: 78500
   },
@@ -98,9 +93,8 @@ const RIVALS = [
     introLine: 'Bienvenido a mi mesa, aquí hasta los ases sudan.',
     defeatLine: 'Ninguna mesa me había visto caer... hasta esta noche. La corona de Espinho ya es tuya, campeón.',
     lives: 5,
-    // PLACEHOLDER: sustituir por DynamicLines.md
-    nearDefeatLines: ['Imposible... ninguna mesa me vio caer.', 'El campeón no puede caer... ¿o sí?', 'El trono me tiembla bajo los pies.'],
-    nearVictoryLines: ['Aquí hasta los ases sudan, y tú ya goteas.', 'Bienvenido a mi mesa: tu última mano.'],
+    nearDefeatLines: ['Interesante... hacía tiempo que no sudaba.', 'No cantes victoria. La última mano aún es mía.', 'Has llegado lejos. Ahora demuestra que no fue suerte.'],
+    nearVictoryLines: ['Te queda una vida y demasiadas dudas.', 'Esto no es el final del torneo. Es el final de tu historia.'],
     rivalSkill: 0.30,
     // Habilidad especial del jefe final: la primera mano que le ganas la
     // aguanta sin perder vida. Se muestra en su pantalla de presentación.
