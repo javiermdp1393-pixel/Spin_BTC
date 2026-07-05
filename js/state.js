@@ -99,6 +99,45 @@ function applyPush(state) {
   return { ...base, label: 'VILLAIN TAKES THE POT', location: 'rival', outcome: 'LOSE', bustOut };
 }
 
+// Solo se puede doblar con 2 vidas o más (regla del juego).
+function canDouble(state) {
+  return state.playerLives >= 2 - 1e-9;
+}
+
+// Doblar: mismo showdown que un push pero con el doble en juego. Ganar quita
+// 2 vidas al rival; perder quita 2 al jugador. Empate se repite sin coste.
+function applyDouble(state) {
+  const rival = getCurrentRival(state);
+  const hand = state.currentHand;
+  const showdown = resolveShowdown(hand.playerCards, hand.communityCards, rival.rivalSkill);
+
+  const base = {
+    revealCards: showdown.rivalCards,
+    playerHandName: showdown.playerHandName,
+    rivalHandName: showdown.rivalHandName,
+    doubled: true
+  };
+
+  if (showdown.cmp === 0) {
+    dealNewHandForState(state);
+    return { ...base, label: 'SPLIT POT', location: 'player', outcome: 'TIE' };
+  }
+
+  if (showdown.cmp > 0) {
+    state.rivalLives -= 2;
+    const rivalFelted = state.rivalLives <= 0;
+    if (rivalFelted) state.status = 'REWARD';
+    else dealNewHandForState(state);
+    return { ...base, label: 'YOU TAKE THE POT ×2', location: 'player', outcome: 'WIN', rivalFelted };
+  }
+
+  state.playerLives = roundLife(state.playerLives - 2);
+  const bustOut = state.playerLives <= 0;
+  if (bustOut) state.status = 'BUST_OUT';
+  else dealNewHandForState(state);
+  return { ...base, label: 'VILLAIN TAKES THE POT ×2', location: 'rival', outcome: 'LOSE', bustOut };
+}
+
 // Aplica el premio del rival derrotado (premio base propio x multiplicador)
 // y lo suma al total acumulado.
 function applyRewardForCurrentRival(state) {

@@ -238,6 +238,18 @@ function renderBattle() {
   document.getElementById('push-button').classList.remove('hidden');
   document.getElementById('fold-button').classList.remove('hidden');
   document.getElementById('continue-button').classList.add('hidden');
+
+  // El botón Doblar solo está disponible con 2 vidas o más.
+  const doubleButton = document.getElementById('double-button');
+  const doubleHint = document.getElementById('double-hint');
+  doubleButton.classList.remove('hidden');
+  if (canDouble(gameState)) {
+    doubleButton.disabled = false;
+    doubleHint.textContent = 'Doblar: pones 2 vidas en juego, ganas o pierdes el doble.';
+  } else {
+    doubleButton.disabled = true;
+    doubleHint.textContent = 'Necesitas 2 vidas o más para Doblar.';
+  }
 }
 
 document.getElementById('battle-odds-label').addEventListener('click', () => {
@@ -272,6 +284,8 @@ function showBattleResult(result) {
 
   document.getElementById('push-button').classList.add('hidden');
   document.getElementById('fold-button').classList.add('hidden');
+  document.getElementById('double-button').classList.add('hidden');
+  document.getElementById('double-hint').textContent = '';
 
   // El juego nunca avanza solo: siempre espera a que el jugador pulse
   // Continuar, tanto si sigue el combate como si terminó (recompensa/bust).
@@ -281,12 +295,15 @@ function showBattleResult(result) {
 // Frase que explica qué combinación decidió la mano.
 function buildComboCaption(result) {
   const rival = getCurrentRival(gameState);
+  const doubleNote = result.doubled ? ' (jugada doble)' : '';
 
   if (result.outcome === 'WIN') {
-    return `Ganas con ${result.playerHandName}. ${rival.name} tenía ${result.rivalHandName}.`;
+    const damage = result.doubled ? 'pierde 2 vidas' : 'pierde 1 vida';
+    return `Ganas con ${result.playerHandName}${doubleNote}. ${rival.name} tenía ${result.rivalHandName} y ${damage}.`;
   }
   if (result.outcome === 'LOSE') {
-    return `${rival.name} gana con ${result.rivalHandName}. Tú tenías ${result.playerHandName}.`;
+    const damage = result.doubled ? 'Pierdes 2 vidas' : 'Pierdes 1 vida';
+    return `${rival.name} gana con ${result.rivalHandName}${doubleNote}. Tú tenías ${result.playerHandName}. ${damage}.`;
   }
   if (result.outcome === 'TIE') {
     return `Empate: ${result.playerHandName} en ambos. Se reparte de nuevo.`;
@@ -296,6 +313,12 @@ function buildComboCaption(result) {
 
 document.getElementById('push-button').addEventListener('click', () => {
   const result = applyPush(gameState);
+  showBattleResult(result);
+});
+
+document.getElementById('double-button').addEventListener('click', () => {
+  if (!canDouble(gameState)) return;
+  const result = applyDouble(gameState);
   showBattleResult(result);
 });
 

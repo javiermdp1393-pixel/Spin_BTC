@@ -27,7 +27,7 @@
     <input id="player-name" type="text" maxlength="24" placeholder="Tu nombre" />
     <label for="player-alias">Poker nickname</label>
     <input id="player-alias" type="text" maxlength="24" placeholder="Tu apodo de torneo" />
-    <p class="rules-summary">Antes de retar al campeón deberás vencer a cinco rivales, cada uno más peligroso que el anterior. Empiezas cada mesa con 3 vidas: si pierdes una mano, el rival te quita 1 vida; si decides no ir a por ella (foldear), pierdes 1/4 de vida.</p>
+    <p class="rules-summary">Antes de retar al campeón deberás vencer a cinco rivales, cada uno más peligroso que el anterior. Empiezas cada mesa con 3 vidas: si pierdes una mano, el rival te quita 1 vida; si decides no ir a por ella (foldear), pierdes 1/4 de vida. Y si lo ves claro puedes <strong>Doblar</strong>: pones 2 vidas en juego (ganas o pierdes el doble), solo disponible con 2 vidas o más.</p>
     <p id="register-error" class="error-text"></p>
     <button id="register-button" class="btn btn-primary">Entrar al torneo</button>
   </div>
@@ -78,9 +78,11 @@
       <div id="battle-player-cards" class="card-row"></div>
       <div class="battle-actions">
         <button id="push-button" class="btn btn-primary">Ir a por ello</button>
+        <button id="double-button" class="btn btn-danger">Doblar</button>
         <button id="fold-button" class="btn btn-secondary">Foldear</button>
         <button id="continue-button" class="btn btn-primary hidden">Continuar</button>
       </div>
+      <p id="double-hint" class="double-hint"></p>
     </div>
 
   </div>
