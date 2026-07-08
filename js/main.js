@@ -603,7 +603,7 @@ document.getElementById('retry-button').addEventListener('click', () => {
 
 // --- Pantalla: Final ---
 
-function renderFinal() {
+async function renderFinal() {
   setPortraitElement(document.getElementById('final-portrait'), { image: 'assets/champion.jpg', name: 'Campeón', suit: 'champion', suitSymbol: '👑' });
   document.getElementById('final-total').textContent = formatEuros(gameState.totalPrize);
   Sound.playMusic('champion');
@@ -612,27 +612,75 @@ function renderFinal() {
     name: gameState.player.name,
     alias: gameState.player.alias,
     totalPrize: gameState.totalPrize,
+    mode: gameState.mode,
+    rivalReached: 'El Pirulas',
     date: new Date().toISOString()
   };
-  const leaderboard = saveRunToLeaderboard(runEntry);
-  renderLeaderboardList(leaderboard, runEntry);
+
+  // Guardado local inmediato: sirve de fallback si Supabase no responde y
+  // permite pintar algo al instante mientras llega la respuesta del servidor.
+  const localList = saveRunToLeaderboard(runEntry);
+  setLeaderboardStatus('Enviando tu marca al ranking mundial…');
+  renderLeaderboardList(localList, runEntry.date);
+
+  // Envío a Supabase y refresco con el ranking global real.
+  const inserted = await submitScore(runEntry);
+  const top = await fetchTopScores();
+
+  if (top) {
+    renderLeaderboardList(top, inserted ? inserted.id : null);
+    setLeaderboardStatus(inserted ? '' : 'No pudimos guardar tu marca online, pero aquí tienes el ranking mundial.');
+  } else {
+    // Supabase no disponible: nos quedamos con el histórico local.
+    setLeaderboardStatus('Sin conexión con el ranking mundial. Mostrando tu histórico local.');
+    renderLeaderboardList(localList, runEntry.date);
+  }
 }
 
-// Pinta el histórico de mejores premios (guardado en este mismo navegador)
-// y marca si la partida recién ganada es un nuevo récord personal.
-function renderLeaderboardList(leaderboard, currentRunEntry) {
+function setLeaderboardStatus(text) {
+  const el = document.getElementById('leaderboard-status');
+  if (!el) return;
+  el.textContent = text || '';
+  el.classList.toggle('hidden', !text);
+}
+
+// Escapa texto de usuario (nombre/apodo) antes de meterlo en innerHTML.
+function escapeHtml(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// Pinta el ranking (global de Supabase o histórico local) y marca la partida
+// recién jugada. `currentId` identifica esa entrada (id de Supabase o fecha
+// local); si es la primera de la lista, se anuncia récord.
+function renderLeaderboardList(entries, currentId) {
   const listEl = document.getElementById('leaderboard-list');
   listEl.innerHTML = '';
 
-  leaderboard.forEach((entry) => {
+  let currentRank = -1;
+  entries.forEach((entry, index) => {
     const li = document.createElement('li');
-    const isCurrentRun = entry === currentRunEntry;
-    if (isCurrentRun) li.classList.add('current-run');
-    li.innerHTML = `<span class="leaderboard-name">${entry.name} "${entry.alias}"</span><span class="leaderboard-amount">${formatEuros(entry.totalPrize)}</span>`;
+    const isCurrentRun = currentId != null && entry.id === currentId;
+    if (isCurrentRun) {
+      li.classList.add('current-run');
+      currentRank = index;
+    }
+    const aliasHtml = entry.alias ? ` "${escapeHtml(entry.alias)}"` : '';
+    const modeTag = entry.mode
+      ? `<span class="leaderboard-mode leaderboard-mode-${entry.mode.toLowerCase()}">${entry.mode === 'FREEZEOUT' ? 'Freezeout' : 'Arcade'}</span>`
+      : '';
+    li.innerHTML =
+      `<span class="leaderboard-name">${escapeHtml(entry.name)}${aliasHtml}</span>` +
+      modeTag +
+      `<span class="leaderboard-amount">${formatEuros(entry.totalPrize)}</span>`;
     listEl.appendChild(li);
   });
 
-  const isNewRecord = leaderboard[0] === currentRunEntry && leaderboard.length > 0;
+  const isNewRecord = currentRank === 0;
   document.getElementById('final-new-record').classList.toggle('hidden', !isNewRecord);
 }
 

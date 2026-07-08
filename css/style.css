@@ -561,7 +561,14 @@ h2 {
   to { transform: scale(1.08); }
 }
 
-/* --- Leaderboard local (pantalla final) --- */
+/* --- Leaderboard mundial (pantalla final) --- */
+
+.leaderboard-status {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: #9a93a4;
+  font-style: italic;
+}
 
 .new-record-banner {
   font-weight: bold;
@@ -613,6 +620,29 @@ h2 {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.leaderboard-mode {
+  flex: none;
+  font-size: 0.65rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+}
+
+.leaderboard-mode-arcade {
+  color: #7fd0c8;
+  border-color: rgba(127, 208, 200, 0.4);
+  background: rgba(127, 208, 200, 0.1);
+}
+
+.leaderboard-mode-freezeout {
+  color: #e8a0a0;
+  border-color: rgba(232, 160, 160, 0.4);
+  background: rgba(232, 160, 160, 0.1);
 }
 
 .leaderboard-amount {

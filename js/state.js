@@ -64,9 +64,12 @@ function effectiveRivalSkill(state, rival) {
   return Math.min(0.9, rival.rivalSkill * mul);
 }
 
-// Vidas de arranque del rival (una más en Freezeout).
+// Vidas de arranque del rival. En Freezeout todos suman una vida extra,
+// salvo que el rival defina un "freezeoutLives" propio (el jefe final).
 function rivalLivesFor(state, rival) {
-  return rival.lives + (isFreezeout(state) ? FREEZEOUT.extraRivalLives : 0);
+  if (!isFreezeout(state)) return rival.lives;
+  if (rival.freezeoutLives != null) return rival.freezeoutLives;
+  return rival.lives + FREEZEOUT.extraRivalLives;
 }
 
 // Golpes que el rival resiste sin perder vida (habilidad de jefe / protección).
