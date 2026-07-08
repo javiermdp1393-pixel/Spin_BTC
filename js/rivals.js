@@ -96,6 +96,10 @@ const RIVALS = [
     nearDefeatLines: ['Interesante... hacía tiempo que no sudaba.', 'No cantes victoria. La última mano aún es mía.', 'Has llegado lejos. Ahora demuestra que no fue suerte.'],
     nearVictoryLines: ['Te queda una vida y demasiadas dudas.', 'Esto no es el final del torneo. Es el final de tu historia.'],
     rivalSkill: 0.30,
+    // Vidas del jefe final: 5 en Arcade (campo "lives") y 7 en Freezeout
+    // (campo "freezeoutLives"), un peldaño por encima del +1 genérico del
+    // resto de rivales para que el cierre del torneo largo pese de verdad.
+    freezeoutLives: 7,
     // Habilidad especial del jefe final: la primera mano que le ganas la
     // aguanta sin perder vida. Se muestra en su pantalla de presentación.
     special: 'Segunda vida del campeón: la primera mano que le ganes, la resiste sin perder ni medio corazón.',

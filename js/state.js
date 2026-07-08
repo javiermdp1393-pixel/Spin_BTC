@@ -20,6 +20,21 @@ const FREEZEOUT = {
   extraRivalLives: 1 // rivales con una vida más
 };
 
+// Ajustes del Desafío diario: gauntlet de 3 rivales con un único stack de 3
+// vidas no recuperables. Los 2 primeros rivales son aleatorios (dificultad
+// Arcade); el 3º es el campeón del día (el nº1 del ranking Arcade). Sin bonus
+// de racha y con 3 folds gratis para TODA la run.
+const DAILY = {
+  startLives: 3, // 3 vidas para toda la run, no recuperables
+  freeFolds: 3, // folds gratis para toda la run (no por rival)
+  // El campeón es el combate decisivo con el stack no recuperable: su nº de
+  // vidas es la palanca real del winrate. Calibrado por simulación a 5 (+escudo)
+  // para dejar la victoria óptima en ~12% (similar al Arcade, bajo el tope 15%).
+  championLives: 5, // vidas del campeón del día
+  championResist: 1, // escudo del campeón: aguanta 1 golpe sin perder vida
+  championSkill: 0.30 // dificultad de cambio de mano (como El Pirulas)
+};
+
 function streakBonusDamage(streak) {
   return streak >= STREAK_ACTIVE_THRESHOLD ? 1 : 0;
 }
@@ -30,6 +45,9 @@ function createInitialState() {
     player: { name: '', alias: '' },
     mode: 'ARCADE', // ARCADE | FREEZEOUT
     demoMode: false, // acceso demo/QA: cada mano elimina al rival
+    daily: false, // desafío diario: gauntlet de 3 rivales con 3 vidas
+    dailyChallenge: null, // { name, alias, totalPrize, mode, date } del campeón del día
+    rivalLineup: null, // lista de rivales de la run actual (RIVALS o lineup diario)
     currentRivalIndex: 0,
     playerLives: PLAYER_STARTING_LIVES,
     rivalLives: 0,
@@ -46,31 +64,47 @@ function isFreezeout(state) {
   return state.mode === 'FREEZEOUT';
 }
 
+function isDaily(state) {
+  return state.daily === true;
+}
+
+// El bonus de racha no aplica en el Desafío diario (no genera corazones extra).
 function isStreakActive(state) {
-  return state.winStreak >= STREAK_ACTIVE_THRESHOLD;
+  return !isDaily(state) && state.winStreak >= STREAK_ACTIVE_THRESHOLD;
 }
 
 function getCurrentRival(state) {
-  return RIVALS[state.currentRivalIndex];
+  const lineup = state.rivalLineup && state.rivalLineup.length ? state.rivalLineup : RIVALS;
+  return lineup[state.currentRivalIndex];
 }
 
 function playerMaxLives(state) {
+  if (isDaily(state)) return DAILY.startLives;
   return isFreezeout(state) ? FREEZEOUT.maxLives : PLAYER_STARTING_LIVES;
 }
 
-// Skill efectivo del rival (mayor en Freezeout), con tope de seguridad.
+// Skill efectivo del rival. En el desafío diario los 2 aleatorios usan su
+// dificultad Arcade y el campeón la del jefe; en Freezeout todos suben.
 function effectiveRivalSkill(state, rival) {
+  if (isDaily(state)) {
+    return rival.dailyChampion ? DAILY.championSkill : rival.rivalSkill;
+  }
   const mul = isFreezeout(state) ? FREEZEOUT.skillMultiplier : 1;
   return Math.min(0.9, rival.rivalSkill * mul);
 }
 
-// Vidas de arranque del rival (una más en Freezeout).
+// Vidas de arranque del rival. Daily: campeón con DAILY.championLives, resto
+// con sus vidas Arcade. Freezeout: todos +1 (salvo freezeoutLives propio).
 function rivalLivesFor(state, rival) {
-  return rival.lives + (isFreezeout(state) ? FREEZEOUT.extraRivalLives : 0);
+  if (isDaily(state)) return rival.dailyChampion ? DAILY.championLives : rival.lives;
+  if (!isFreezeout(state)) return rival.lives;
+  if (rival.freezeoutLives != null) return rival.freezeoutLives;
+  return rival.lives + FREEZEOUT.extraRivalLives;
 }
 
 // Golpes que el rival resiste sin perder vida (habilidad de jefe / protección).
 function getResistCount(state, rival) {
+  if (isDaily(state)) return rival.dailyChampion ? DAILY.championResist : 0;
   if (isFreezeout(state)) {
     if (rival.id === 'el-pirulas') return 2;
     if (rival.id === 'fabrizio') return 1;
@@ -88,20 +122,74 @@ function roundLife(value) {
 // El primer enfrentamiento se prepara al pulsar "Sentarse a la mesa".
 function startTournament(state, mode) {
   state.mode = mode;
+  state.daily = false;
+  state.dailyChallenge = null;
+  state.rivalLineup = RIVALS;
   state.currentRivalIndex = 0;
   state.totalPrize = 0;
   state.playerLives = mode === 'FREEZEOUT' ? FREEZEOUT.startLives : PLAYER_STARTING_LIVES;
 }
 
+// Construye el rival "campeón del día" a partir del nº1 del ranking Arcade.
+// Es un modelo sin rostro (misma imagen para todos) con el nombre/apodo del
+// jugador que lidera. Dificultad de jefe: 3 vidas, 1 escudo y skill de Pirulas.
+function buildDailyChampionRival(challenge) {
+  const name = (challenge && challenge.name) ? challenge.name : 'El Pirulas';
+  const alias = (challenge && challenge.alias) ? challenge.alias : 'Campeón del día';
+  return {
+    id: 'daily-champion',
+    name,
+    alias,
+    suit: 'champion',
+    suitSymbol: '👑',
+    image: 'assets/rivals/daily-champion.png',
+    introLine: 'Hoy el trono es mío. Veamos si aguantas hasta el final.',
+    defeatLine: 'Me has arrebatado la corona del día... disfrútala, dura 24 horas.',
+    nearDefeatLines: ['¿En serio vas a quitarme el trono?', 'No cantes victoria todavía.', 'Una mano más y esto se acaba.'],
+    nearVictoryLines: ['El trono no se hereda, se defiende.', 'Estás a una mano de caer.'],
+    rivalSkill: DAILY.championSkill,
+    lives: DAILY.championLives,
+    special: 'El campeón del día resiste el primer golpe sin perder vida.',
+    dailyChampion: true,
+    basePrize: 100000
+  };
+}
+
+// Lineup del desafío diario: 2 rivales aleatorios de los normales (sin El
+// Pirulas), ordenados de menos a más duro, + el campeón del día al final.
+function buildDailyLineup(challenge) {
+  const pool = RIVALS.filter((r) => !r.finalBoss);
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  const two = shuffled.slice(0, 2).sort((a, b) => a.basePrize - b.basePrize);
+  return [...two, buildDailyChampionRival(challenge)];
+}
+
+// Arranca el desafío diario: gauntlet de 3 rivales con un único stack de 3
+// vidas no recuperables y 3 folds gratis para toda la run. `challenge` =
+// { name, alias, totalPrize, mode, date } del campeón del día.
+function startDailyChallenge(state, challenge) {
+  state.mode = 'ARCADE'; // reglas base (odds/premios) tipo Arcade
+  state.daily = true;
+  state.dailyChallenge = challenge;
+  state.rivalLineup = buildDailyLineup(challenge);
+  state.currentRivalIndex = 0;
+  state.totalPrize = 0;
+  state.playerLives = DAILY.startLives;
+  state.freeFoldsRemaining = DAILY.freeFolds; // para toda la run
+}
+
 // Prepara un nuevo enfrentamiento. En Arcade las vidas se resetean a 3; en
-// Freezeout se conserva el stack entre rivales.
+// Freezeout y en el Desafío diario se conserva el stack entre rivales.
 function startRivalEncounter(state) {
   const rival = getCurrentRival(state);
-  if (!isFreezeout(state)) state.playerLives = PLAYER_STARTING_LIVES;
+  if (!isFreezeout(state) && !isDaily(state)) state.playerLives = PLAYER_STARTING_LIVES;
   state.rivalLives = rivalLivesFor(state, rival);
   state.winStreak = 0;
   state.resistRemaining = getResistCount(state, rival);
-  state.freeFoldsRemaining = isFreezeout(state) ? FREEZEOUT.freeFolds : 0;
+  // Daily: los folds gratis son para toda la run, no se reinician por rival.
+  if (!isDaily(state)) {
+    state.freeFoldsRemaining = isFreezeout(state) ? FREEZEOUT.freeFolds : 0;
+  }
   state.rivalLine = { victoryShown: false, defeatShown: false, text: '' };
   dealNewHandForState(state);
 }
@@ -203,10 +291,12 @@ function resolveHand(state, stake, doubled) {
     if (state.resistRemaining > 0) {
       state.resistRemaining -= 1;
       dealNewHandForState(state);
-      return { ...base, label: rival.finalBoss ? 'EL PIRULAS RESISTE' : 'EL RIVAL RESISTE', location: 'player', outcome: 'WIN', rivalFelted: false, bossResisted: true };
+      const resistLabel = rival.finalBoss ? 'EL PIRULAS RESISTE' : (rival.dailyChampion ? 'EL CAMPEÓN RESISTE' : 'EL RIVAL RESISTE');
+      return { ...base, label: resistLabel, location: 'player', outcome: 'WIN', rivalFelted: false, bossResisted: true };
     }
 
-    const bonus = streakBonusDamage(state.winStreak);
+    // El Desafío diario no genera corazones extra por racha.
+    const bonus = isDaily(state) ? 0 : streakBonusDamage(state.winStreak);
     state.rivalLives = roundLife(state.rivalLives - (stake + bonus));
     const rivalFelted = state.rivalLives <= 0;
     if (rivalFelted) state.status = 'REWARD';
@@ -254,13 +344,15 @@ function applyRewardForCurrentRival(state) {
   return reward;
 }
 
-// Avanza al siguiente rival. En Freezeout recupera una vida (hasta el máximo).
+// Avanza al siguiente rival. En Freezeout recupera una vida (hasta el máximo);
+// en el Desafío diario no hay recuperación (stack único no recuperable).
 function advanceToNextRival(state) {
   if (isFreezeout(state)) {
     state.playerLives = Math.min(FREEZEOUT.maxLives, state.playerLives + FREEZEOUT.lifePerWin);
   }
   state.currentRivalIndex += 1;
-  if (state.currentRivalIndex >= RIVALS.length) {
+  const lineup = state.rivalLineup && state.rivalLineup.length ? state.rivalLineup : RIVALS;
+  if (state.currentRivalIndex >= lineup.length) {
     state.status = 'FINAL';
   } else {
     state.status = 'RIVAL_INTRO';
@@ -268,12 +360,18 @@ function advanceToNextRival(state) {
 }
 
 // Reinicia el torneo tras un BUST_OUT, conservando nombre/apodo, modo y demo.
+// En el Desafío diario se rearma una run nueva (nuevos rivales aleatorios).
 function restartTournament(state) {
-  const { player, mode, demoMode } = state;
+  const { player, mode, demoMode, daily, dailyChallenge } = state;
   Object.assign(state, createInitialState());
   state.player = player;
-  state.mode = mode;
   state.demoMode = demoMode;
-  state.playerLives = mode === 'FREEZEOUT' ? FREEZEOUT.startLives : PLAYER_STARTING_LIVES;
+  if (daily) {
+    startDailyChallenge(state, dailyChallenge);
+  } else {
+    state.mode = mode;
+    state.rivalLineup = RIVALS;
+    state.playerLives = mode === 'FREEZEOUT' ? FREEZEOUT.startLives : PLAYER_STARTING_LIVES;
+  }
   state.status = 'RIVAL_INTRO';
 }

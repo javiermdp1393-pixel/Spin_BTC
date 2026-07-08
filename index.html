@@ -11,6 +11,9 @@
 <!-- Botón de silencio (persistente en todas las pantallas) -->
 <button id="mute-button" class="mute-button" type="button" aria-label="Silenciar sonido">🔊</button>
 
+<!-- Versión de la app (persistente) -->
+<div class="app-version">v1.0.1</div>
+
 <!-- 1. PORTADA -->
 <section id="launch-screen" class="screen active">
   <div class="hero-bg" style="background-image: url('assets/cover.jpg');"></div>
@@ -27,30 +30,109 @@
 
 <!-- 2. REGISTRO -->
 <section id="register-screen" class="screen">
-  <div class="panel">
-    <h2>Toma asiento en la primera mesa</h2>
-    <p class="copy">Escribe tu nombre, elige tu apodo y toma asiento. La primera mano empieza ahora.</p>
-    <label for="player-name">Player name</label>
-    <input id="player-name" type="text" maxlength="24" placeholder="Tu nombre" />
-    <label for="player-alias">Poker nickname</label>
-    <input id="player-alias" type="text" maxlength="24" placeholder="Tu apodo de torneo" />
-    <p class="rules-summary">Antes de retar al campeón deberás vencer a cinco rivales, cada uno más peligroso que el anterior. Empiezas cada mesa con 3 vidas: si pierdes una mano, el rival te quita 1 vida; si decides no ir a por ella (foldear), pierdes 1/4 de vida. Y si lo ves claro puedes <strong>Doblar</strong>: pones 2 vidas en juego (ganas o pierdes el doble), solo disponible con 2 vidas o más.</p>
-    <p id="register-error" class="error-text"></p>
-    <div class="mode-buttons">
-      <button id="register-button" class="btn btn-primary">Entrar al Torneo</button>
-      <button id="freezeout-button" class="btn btn-danger">Freezeout Mode</button>
+  <nav class="register-tabs">
+    <button class="reg-tab active" data-regtab="inscribirse" type="button">INSCRIBIRSE</button>
+    <button class="reg-tab" data-regtab="reglas" type="button">REGLAS</button>
+    <button class="reg-tab" data-regtab="records" type="button">RECORDS</button>
+  </nav>
+
+  <!-- 2a. Vista INSCRIBIRSE -->
+  <div id="regview-inscribirse" class="regview active">
+    <div class="panel">
+      <h2>Toma asiento en la primera mesa</h2>
+      <p class="copy">Escribe tu nombre, elige tu apodo y toma asiento. La primera mano empieza ahora.</p>
+      <label for="player-name">Player name</label>
+      <input id="player-name" type="text" maxlength="24" placeholder="Tu nombre" />
+      <label for="player-alias">Poker nickname</label>
+      <input id="player-alias" type="text" maxlength="24" placeholder="Tu apodo de torneo" />
+      <p class="rules-summary">Antes de retar al campeón deberás vencer a cinco rivales, cada uno más peligroso que el anterior. Empiezas cada mesa con 3 vidas: si pierdes una mano, el rival te quita 1 vida; si decides no ir a por ella (foldear), pierdes 1/4 de vida. Y si lo ves claro puedes <strong>Doblar</strong>: pones 2 vidas en juego (ganas o pierdes el doble), solo disponible con 2 vidas o más. Consulta la pestaña <strong>REGLAS</strong> para el detalle de cada modo.</p>
+      <p id="register-error" class="error-text"></p>
+      <div class="mode-buttons">
+        <button id="register-button" class="btn btn-primary">Entrar al Torneo</button>
+        <button id="freezeout-button" class="btn btn-danger">Freezeout Mode</button>
+        <button id="daily-button" class="btn btn-daily">Desafío diario 👑</button>
+      </div>
+      <div class="mode-descriptions">
+        <p><strong>Arcade Mode</strong><br />Las vidas se reinician al empezar cada rival.</p>
+        <p><strong>Freezeout Mode</strong><br />Las vidas no se reinician. Sobrevive con el mismo stack hasta El Pirulas. Empiezas con 5 vidas, recuperas una por cada rival derrotado y tienes un fold gratis por rival.</p>
+        <p><strong>Desafío diario</strong><br />Gauntlet de 3 rivales con 3 vidas no recuperables: 2 rivales al azar y el campeón del día (el nº1 del ranking Arcade). Derrótalo para llevarte la corona.</p>
+      </div>
+      <p id="demo-note" class="demo-note hidden">🛠️ Modo demo/QA activo — cada mano elimina al rival.</p>
+
+      <div class="records-block">
+        <p class="zone-label">Mejores puntuaciones</p>
+        <div id="records-register" class="records-widget"></div>
+      </div>
     </div>
-    <div class="mode-descriptions">
-      <p><strong>Arcade Mode</strong><br />Las vidas se reinician al empezar cada rival.</p>
-      <p><strong>Freezeout Mode</strong><br />Las vidas no se reinician. Sobrevive con el mismo stack hasta El Pirulas. Empiezas con 5 vidas, recuperas una por cada rival derrotado y tienes un fold gratis por rival.</p>
+  </div>
+
+  <!-- 2b. Vista REGLAS -->
+  <div id="regview-reglas" class="regview">
+    <div class="panel">
+      <h2>Reglas del torneo</h2>
+      <div class="rules-modes">
+        <button class="rules-mode-btn active" data-rulesmode="arcade" type="button">Arcade</button>
+        <button class="rules-mode-btn" data-rulesmode="freezeout" type="button">Freezeout</button>
+        <button class="rules-mode-btn" data-rulesmode="daily" type="button">Desafío diario</button>
+      </div>
+
+      <div class="rules-common">
+        <p><strong>Cómo se juega.</strong> En cada mano ves tus 2 cartas, las 5 comunitarias y tu probabilidad estimada de ganar. Eliges:</p>
+        <ul>
+          <li><strong>CALL</strong>: juegas la mano (1 vida en juego). Si ganas, el rival pierde 1 corazón; si pierdes, lo pierdes tú.</li>
+          <li><strong>FOLD</strong>: te retiras y pierdes 1/4 de corazón (salvo fold gratis).</li>
+          <li><strong>DOBLAR</strong>: pones 2 vidas en juego (ganas o pierdes el doble). Solo con 2 vidas o más.</li>
+          <li><strong>Empate</strong>: se reparte de nuevo sin coste.</li>
+        </ul>
+        <p>Cada rival derrotado te da un premio base × un multiplicador de la ruleta (con opción de jackpot). Si te quedas sin vidas, busteas.</p>
+      </div>
+
+      <div id="rules-arcade" class="rules-body active">
+        <h3>Arcade</h3>
+        <ul>
+          <li>Empiezas cada mesa con <strong>3 vidas</strong>, que se <strong>reinician</strong> al pasar de rival.</li>
+          <li>6 rivales en escalera; <strong>El Pirulas</strong> es el jefe final (5 vidas y resiste el primer golpe sin perder vida).</li>
+          <li><strong>Racha</strong>: al encadenar 3 victorias seguidas, cada mano ganada hace +1 corazón de daño extra.</li>
+        </ul>
+      </div>
+
+      <div id="rules-freezeout" class="rules-body">
+        <h3>Freezeout</h3>
+        <ul>
+          <li>Un <strong>único stack</strong>: empiezas con <strong>5 vidas</strong> y <strong>no</strong> se reinician entre rivales.</li>
+          <li>Recuperas <strong>1 vida</strong> por cada rival derrotado (máximo 5) y tienes <strong>1 fold gratis</strong> por rival.</li>
+          <li>Rivales más afilados (mejoran su mano más a menudo) y con 1 vida extra. El Pirulas: <strong>7 vidas</strong> y resiste 2 golpes.</li>
+          <li>Más difícil que Arcade: pensado para quien busca el reto largo.</li>
+        </ul>
+      </div>
+
+      <div id="rules-daily" class="rules-body">
+        <h3>Desafío diario 👑</h3>
+        <ul>
+          <li>Gauntlet de <strong>3 rivales</strong> con un único stack de <strong>3 vidas no recuperables</strong>.</li>
+          <li>Los 2 primeros son <strong>aleatorios</strong> (dificultad Arcade); el 3º es el <strong>campeón del día</strong>: el nº1 del ranking Arcade, con 5 vidas, 1 escudo y dificultad de jefe.</li>
+          <li><strong>3 folds gratis</strong> para toda la run. <strong>Sin</strong> bonus de racha.</li>
+          <li>Derrota al campeón para arrebatarle la corona del día. El rival cambia cada día.</li>
+        </ul>
+      </div>
     </div>
-    <p id="demo-note" class="demo-note hidden">🛠️ Modo demo/QA activo — cada mano elimina al rival.</p>
+  </div>
+
+  <!-- 2c. Vista RECORDS -->
+  <div id="regview-records" class="regview">
+    <div class="panel">
+      <h2>Récords</h2>
+      <p class="copy">Las mejores puntuaciones del ranking mundial, compartidas entre todos los jugadores.</p>
+      <div id="records-tab" class="records-widget"></div>
+    </div>
   </div>
 </section>
 
 <!-- 3. INTRO DE RIVAL -->
 <section id="rival-intro-screen" class="screen">
   <div class="panel">
+    <p id="rival-intro-daily" class="daily-banner hidden"></p>
+    <p id="rival-intro-winners" class="daily-winners-count hidden"></p>
     <div id="rival-intro-portrait" class="portrait portrait-large"></div>
     <h2 id="rival-intro-name"></h2>
     <p id="rival-intro-alias" class="alias"></p>
@@ -143,6 +225,11 @@
     <p class="copy">No era tu mesa. Vuelve a sentarte.</p>
     <p class="total-prize">Premio acumulado perdido: <span id="bustout-total"></span></p>
     <button id="retry-button" class="btn btn-primary">Reintentar torneo</button>
+
+    <div class="records-block">
+      <p class="zone-label">Mejores puntuaciones</p>
+      <div id="records-bustout" class="records-widget"></div>
+    </div>
   </div>
 </section>
 
@@ -153,10 +240,13 @@
     <h2>TENEMOS NUEVO CAMPEÓN</h2>
     <p class="copy">Te has convertido en el campeón de SPINHO BEAT THE CHAMPION. Felicidades.</p>
     <p class="total-prize">Premio total acumulado: <span id="final-total"></span></p>
+    <p id="final-daily" class="daily-banner hidden"></p>
+    <div id="daily-winners" class="daily-winners hidden"></div>
     <p id="final-new-record" class="new-record-banner hidden">¡Nuevo récord personal!</p>
 
     <div class="leaderboard">
-      <p class="zone-label">Tus mejores premios</p>
+      <p class="zone-label">Ranking mundial</p>
+      <p id="leaderboard-status" class="leaderboard-status hidden"></p>
       <ol id="leaderboard-list" class="leaderboard-list"></ol>
     </div>
   </div>
@@ -166,7 +256,9 @@
 <script src="js/poker.js"></script>
 <script src="js/odds.js"></script>
 <script src="js/rewards.js"></script>
+<script src="js/supabase-config.js"></script>
 <script src="js/leaderboard.js"></script>
+<script src="js/records.js"></script>
 <script src="js/sound.js"></script>
 <script src="js/state.js"></script>
 <script src="js/main.js"></script>

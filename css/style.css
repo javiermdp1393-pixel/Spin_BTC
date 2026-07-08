@@ -73,6 +73,20 @@ h2 {
   color: #8a7076;
 }
 
+/* Desafío diario: morado real, distinto de los modos normales. */
+.btn-daily {
+  background: linear-gradient(180deg, #7b4bd6, #4a2a8f);
+  color: #f3ecff;
+  font-weight: bold;
+  box-shadow: 0 0 12px rgba(123, 75, 214, 0.35);
+}
+
+.btn-daily:disabled {
+  background: #2c2440;
+  color: #8a80a6;
+  box-shadow: none;
+}
+
 /* Doblar: naranja de "riesgo/precaución", distinto del oro (CALL) y del rojo (FOLD). */
 .btn-risk {
   background: linear-gradient(180deg, #f0871f, #b05610);
@@ -561,13 +575,45 @@ h2 {
   to { transform: scale(1.08); }
 }
 
-/* --- Leaderboard local (pantalla final) --- */
+/* --- Leaderboard mundial (pantalla final) --- */
+
+.leaderboard-status {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: #9a93a4;
+  font-style: italic;
+}
 
 .new-record-banner {
   font-weight: bold;
   color: #f4d976;
   text-shadow: 0 0 10px rgba(244, 217, 118, 0.6);
   margin: 4px 0 0;
+}
+
+/* Banner del desafío diario (intro de rival y pantalla final). */
+.daily-banner {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #ecdfff;
+  background: rgba(123, 75, 214, 0.15);
+  border: 1px solid rgba(123, 75, 214, 0.5);
+}
+
+.daily-banner-win {
+  color: #f4d976;
+  background: rgba(212, 175, 55, 0.15);
+  border-color: rgba(212, 175, 55, 0.55);
+  text-shadow: 0 0 10px rgba(244, 217, 118, 0.5);
+}
+
+.daily-banner-fail {
+  color: #d8c8f0;
+  background: rgba(123, 75, 214, 0.1);
+  border-color: rgba(123, 75, 214, 0.4);
 }
 
 .leaderboard {
@@ -613,6 +659,29 @@ h2 {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.leaderboard-mode {
+  flex: none;
+  font-size: 0.65rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+}
+
+.leaderboard-mode-arcade {
+  color: #7fd0c8;
+  border-color: rgba(127, 208, 200, 0.4);
+  background: rgba(127, 208, 200, 0.1);
+}
+
+.leaderboard-mode-freezeout {
+  color: #e8a0a0;
+  border-color: rgba(232, 160, 160, 0.4);
+  background: rgba(232, 160, 160, 0.1);
 }
 
 .leaderboard-amount {
@@ -853,4 +922,242 @@ h2 {
 
 .rival-line:empty {
   display: none;
+}
+
+/* --- Registro: pestañas (INSCRIBIRSE / REGLAS / RECORDS) --- */
+
+.register-tabs {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-start;
+  max-width: 520px;
+  margin: 0 auto 10px;
+  padding: 0 4px;
+}
+
+.reg-tab {
+  flex: 1;
+  padding: 8px 6px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  letter-spacing: 0.04em;
+  color: #b9b0c4;
+  background: #14121a;
+  border: 1px solid #2a2731;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+}
+
+.reg-tab.active {
+  color: #1a1206;
+  background: linear-gradient(180deg, #d4af37, #a67c1e);
+}
+
+.regview {
+  display: none;
+}
+
+.regview.active {
+  display: block;
+}
+
+/* --- Reglas --- */
+
+.rules-modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin: 8px 0 14px;
+}
+
+.rules-mode-btn {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #cabfe0;
+  background: #14121a;
+  border: 1px solid #2a2731;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.rules-mode-btn.active {
+  color: #1a1206;
+  background: linear-gradient(180deg, #d4af37, #a67c1e);
+  border-color: #a67c1e;
+}
+
+.rules-common {
+  text-align: left;
+  font-size: 0.85rem;
+  color: #cfc7d6;
+  border-bottom: 1px solid #201e26;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+}
+
+.rules-body {
+  display: none;
+  text-align: left;
+  font-size: 0.85rem;
+  color: #e8dcc0;
+}
+
+.rules-body.active {
+  display: block;
+}
+
+.rules-body h3 {
+  color: #f4d976;
+  margin: 0 0 8px;
+}
+
+.rules-common ul,
+.rules-body ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.rules-common li,
+.rules-body li {
+  margin-bottom: 5px;
+  line-height: 1.35;
+}
+
+/* --- Widget de récords (registro y bust out) --- */
+
+.records-block {
+  margin-top: 20px;
+  text-align: left;
+}
+
+.records-modes {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.records-mode-btn {
+  padding: 5px 14px;
+  font-size: 0.78rem;
+  font-weight: bold;
+  color: #cabfe0;
+  background: #14121a;
+  border: 1px solid #2a2731;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.records-mode-btn.active {
+  color: #1a1206;
+  background: linear-gradient(180deg, #d4af37, #a67c1e);
+  border-color: #a67c1e;
+}
+
+.records-champion {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  color: #f4d976;
+}
+
+.records-champion strong {
+  color: #ffe89a;
+}
+
+.records-list {
+  list-style: none;
+  counter-reset: records-rank;
+  margin: 0;
+  padding: 0;
+  background: #0e0d12;
+  border: 1px solid #2a2731;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.records-list li {
+  counter-increment: records-rank;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  font-size: 0.85rem;
+  border-bottom: 1px solid #201e26;
+}
+
+.records-list li:last-child {
+  border-bottom: none;
+}
+
+.records-list li::before {
+  content: counter(records-rank) '.';
+  color: #6f6878;
+  font-weight: bold;
+  min-width: 1.4em;
+}
+
+.records-list li.records-empty {
+  color: #8a8194;
+  justify-content: center;
+}
+
+.records-list li.records-empty::before {
+  content: '';
+  min-width: 0;
+}
+
+.records-name {
+  flex: 1;
+  color: #e8dcc0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.records-amount {
+  color: #d4af37;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.records-status {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  font-style: italic;
+  color: #9a93a4;
+}
+
+/* --- Versión de la app (badge persistente) --- */
+
+.app-version {
+  position: fixed;
+  left: 8px;
+  bottom: 8px;
+  z-index: 50;
+  font-family: 'Arial', 'Helvetica Neue', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  color: #6f6878;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* --- Desafío diario: ganadores del día --- */
+
+.daily-winners-count {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: #f4d976;
+}
+
+.daily-winners {
+  margin: 10px 0 6px;
+  text-align: left;
+}
+
+.daily-winners .zone-label {
+  margin-bottom: 6px;
 }

@@ -176,21 +176,37 @@ function renderLivesHearts(lives, maxLives) {
   return `<span class="hearts">${html}</span> <span class="lives-number">${formatLifeNumber(lives)}</span>`;
 }
 
+function renderPortraitPlaceholder(el, rival) {
+  el.classList.add('is-placeholder', `placeholder-${rival.suit}`);
+  el.innerHTML = `<span class="portrait-symbol">${rival.suitSymbol}</span>`;
+}
+
 function setPortraitElement(el, rival) {
   el.className = el.className.replace(/\s*placeholder-\S+/g, '').replace(/\s*is-placeholder/g, '').trim();
   el.style.backgroundImage = '';
 
-  if (rival.image) {
-    // El retrato se muestra completo (contain) sobre una copia difuminada de
-    // la propia imagen, así el hueco alrededor no muestra un color que
-    // desentone con el fondo del arte de cada personaje.
-    el.innerHTML =
-      `<div class="portrait-blur" style="background-image:url('${rival.image}')"></div>` +
-      `<img class="portrait-img" src="${rival.image}" alt="${rival.name}">`;
-  } else {
-    el.classList.add('is-placeholder', `placeholder-${rival.suit}`);
-    el.innerHTML = `<span class="portrait-symbol">${rival.suitSymbol}</span>`;
+  if (!rival.image) {
+    renderPortraitPlaceholder(el, rival);
+    return;
   }
+
+  // El retrato se muestra completo (contain) sobre una copia difuminada de la
+  // propia imagen, así el hueco alrededor no desentona con el arte. Si la
+  // imagen aún no existe (p. ej. el modelo del campeón del día sin subir), el
+  // onerror cae al placeholder del palo en vez de mostrar un icono roto.
+  const blur = document.createElement('div');
+  blur.className = 'portrait-blur';
+  blur.style.backgroundImage = `url('${rival.image}')`;
+
+  const img = document.createElement('img');
+  img.className = 'portrait-img';
+  img.src = rival.image;
+  img.alt = rival.name;
+  img.onerror = () => renderPortraitPlaceholder(el, rival);
+
+  el.innerHTML = '';
+  el.appendChild(blur);
+  el.appendChild(img);
 }
 
 // --- Pantalla: Registro ---
@@ -216,6 +232,8 @@ document.getElementById('start-button').addEventListener('click', () => {
   gameState.demoMode = access.demo;
   document.getElementById('demo-note').classList.toggle('hidden', !access.demo);
   gameState.status = 'REGISTER';
+  showRegisterView('inscribirse');
+  renderRecordsWidget(document.getElementById('records-register'), 'ARCADE');
   showScreen(gameState.status);
 });
 
@@ -242,10 +260,102 @@ function startTournamentFlow(mode) {
 document.getElementById('register-button').addEventListener('click', () => startTournamentFlow('ARCADE'));
 document.getElementById('freezeout-button').addEventListener('click', () => startTournamentFlow('FREEZEOUT'));
 
+// Rival del día por defecto si Supabase no responde: la casa (El Pirulas).
+const DEFAULT_DAILY_CHALLENGE = { name: 'El Pirulas', alias: 'Final Hand', totalPrize: 100000, mode: 'ARCADE', date: null };
+
+// Nº de jugadores que ya han batido el desafío de hoy (se muestra en la intro).
+let dailyWinnersCount = null;
+
+// Desafío diario: torneo Arcade en el que además hay que superar el premio del
+// nº1 del leaderboard (rival del día, servido por el cron de Supabase).
+async function startDailyChallengeFlow() {
+  const name = document.getElementById('player-name').value.trim();
+  const alias = document.getElementById('player-alias').value.trim();
+  const errorEl = document.getElementById('register-error');
+
+  if (!name || !alias) {
+    errorEl.textContent = 'La mesa necesita tu nombre y tu apodo antes de empezar.';
+    return;
+  }
+
+  errorEl.textContent = '';
+  gameState.player.name = name;
+  gameState.player.alias = alias;
+
+  const dailyButton = document.getElementById('daily-button');
+  dailyButton.disabled = true;
+  const challenge = (await fetchDailyChallenge()) || DEFAULT_DAILY_CHALLENGE;
+  // Cuántos jugadores distintos ya han batido el reto de hoy (para la intro).
+  const winners = await fetchDailyWinners(200);
+  dailyWinnersCount = winners ? new Set(winners.map((w) => `${w.name}|${w.alias || ''}`)).size : null;
+  dailyButton.disabled = false;
+
+  startDailyChallenge(gameState, challenge);
+  gameState.status = 'RIVAL_INTRO';
+  renderRivalIntro();
+  showScreen(gameState.status);
+}
+
+document.getElementById('daily-button').addEventListener('click', startDailyChallengeFlow);
+
+// --- Pantalla de registro: pestañas (INSCRIBIRSE / REGLAS / RECORDS) ---
+
+function showRegisterView(view) {
+  document.querySelectorAll('#register-screen .reg-tab').forEach((t) => {
+    t.classList.toggle('active', t.dataset.regtab === view);
+  });
+  document.querySelectorAll('#register-screen .regview').forEach((v) => {
+    v.classList.toggle('active', v.id === `regview-${view}`);
+  });
+  // La tabla de récords se (re)carga al abrir su pestaña, para traer lo último.
+  if (view === 'records') renderRecordsWidget(document.getElementById('records-tab'), 'ARCADE');
+}
+
+document.querySelectorAll('#register-screen .reg-tab').forEach((tab) => {
+  tab.addEventListener('click', () => showRegisterView(tab.dataset.regtab));
+});
+
+// Switch de reglas por modo dentro de la pestaña REGLAS.
+document.querySelectorAll('.rules-mode-btn').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const modeKey = btn.dataset.rulesmode;
+    document.querySelectorAll('.rules-mode-btn').forEach((b) => b.classList.toggle('active', b === btn));
+    document.querySelectorAll('.rules-body').forEach((body) => {
+      body.classList.toggle('active', body.id === `rules-${modeKey}`);
+    });
+  });
+});
+
 // --- Pantalla: Intro de rival ---
 
 function renderRivalIntro() {
   const rival = getCurrentRival(gameState);
+
+  // Banner del desafío diario: progreso del gauntlet (rival X/3, vidas y folds).
+  const dailyEl = document.getElementById('rival-intro-daily');
+  if (gameState.daily) {
+    const total = (gameState.rivalLineup && gameState.rivalLineup.length) || 3;
+    const idx = gameState.currentRivalIndex + 1;
+    const folds = gameState.freeFoldsRemaining;
+    dailyEl.textContent = rival.dailyChampion
+      ? `👑 Rival ${idx}/${total} — El campeón del día. ¡Destrónalo para llevarte la corona!`
+      : `👑 Desafío diario · Rival ${idx}/${total} · 3 vidas no recuperables · ${folds} fold${folds === 1 ? '' : 's'} gratis`;
+    dailyEl.classList.remove('hidden');
+  } else {
+    dailyEl.textContent = '';
+    dailyEl.classList.add('hidden');
+  }
+
+  // Cuántos jugadores ya han batido el reto de hoy.
+  const winnersEl = document.getElementById('rival-intro-winners');
+  if (gameState.daily && dailyWinnersCount) {
+    winnersEl.textContent = `🏅 ${dailyWinnersCount} ${dailyWinnersCount === 1 ? 'jugador ya ha' : 'jugadores ya han'} batido el reto de hoy`;
+    winnersEl.classList.remove('hidden');
+  } else {
+    winnersEl.textContent = '';
+    winnersEl.classList.add('hidden');
+  }
+
   setPortraitElement(document.getElementById('rival-intro-portrait'), rival);
   document.getElementById('rival-intro-name').textContent = rival.name;
   document.getElementById('rival-intro-alias').textContent = rival.alias;
@@ -441,18 +551,20 @@ function renderRoadmap(containerId) {
   if (!container) return;
   container.innerHTML = '';
 
-  RIVALS.forEach((rival, index) => {
+  const lineup = (gameState.rivalLineup && gameState.rivalLineup.length) ? gameState.rivalLineup : RIVALS;
+  lineup.forEach((rival, index) => {
     const node = document.createElement('div');
     node.className = 'roadmap-node';
 
+    const isBoss = rival.finalBoss || rival.dailyChampion;
     const defeated = index < gameState.currentRivalIndex;
     const current = index === gameState.currentRivalIndex;
-    // Se revela el nombre de: derrotados, el actual y siempre el jefe final.
-    const revealed = defeated || current || rival.finalBoss;
+    // Se revela el nombre de: derrotados, el actual y siempre el jefe/campeón.
+    const revealed = defeated || current || isBoss;
 
     if (defeated) node.classList.add('defeated');
     if (current) node.classList.add('current');
-    if (rival.finalBoss) node.classList.add('boss');
+    if (isBoss) node.classList.add('boss');
 
     const icon = document.createElement('div');
     icon.className = 'roadmap-icon';
@@ -467,7 +579,7 @@ function renderRoadmap(containerId) {
 
     const label = document.createElement('div');
     label.className = 'roadmap-label';
-    label.textContent = revealed ? (rival.finalBoss ? '👑 ' + rival.name : rival.name) : '???';
+    label.textContent = revealed ? (isBoss ? '👑 ' + rival.name : rival.name) : '???';
 
     node.appendChild(icon);
     node.appendChild(label);
@@ -593,6 +705,7 @@ document.getElementById('next-table-button').addEventListener('click', () => {
 function renderBustOut() {
   document.getElementById('bustout-total').textContent = formatEuros(gameState.totalPrize);
   Sound.playMusic('derrota');
+  renderRecordsWidget(document.getElementById('records-bustout'), gameState.mode);
 }
 
 document.getElementById('retry-button').addEventListener('click', () => {
@@ -603,36 +716,151 @@ document.getElementById('retry-button').addEventListener('click', () => {
 
 // --- Pantalla: Final ---
 
-function renderFinal() {
+async function renderFinal() {
   setPortraitElement(document.getElementById('final-portrait'), { image: 'assets/champion.jpg', name: 'Campeón', suit: 'champion', suitSymbol: '👑' });
   document.getElementById('final-total').textContent = formatEuros(gameState.totalPrize);
   Sound.playMusic('champion');
+
+  renderDailyResult();
+
+  // El Desafío diario no puntúa en el ranking mundial (otras reglas). En su
+  // lugar registra que has batido el reto y muestra el roster de ganadores de
+  // hoy, además del top Arcade como referencia.
+  if (gameState.daily) {
+    await submitDailyWin({
+      name: gameState.player.name,
+      alias: gameState.player.alias,
+      totalPrize: gameState.totalPrize
+    });
+    const winners = await fetchDailyWinners(50);
+    renderDailyWinners(winners);
+    setLeaderboardStatus('El Desafío diario no cuenta para el ranking mundial.');
+    const topDaily = await fetchTopScores();
+    if (topDaily) renderLeaderboardList(topDaily, null);
+    return;
+  }
+  document.getElementById('daily-winners').classList.add('hidden');
 
   const runEntry = {
     name: gameState.player.name,
     alias: gameState.player.alias,
     totalPrize: gameState.totalPrize,
+    mode: gameState.mode,
+    rivalReached: 'El Pirulas',
     date: new Date().toISOString()
   };
-  const leaderboard = saveRunToLeaderboard(runEntry);
-  renderLeaderboardList(leaderboard, runEntry);
+
+  // Guardado local inmediato: sirve de fallback si Supabase no responde y
+  // permite pintar algo al instante mientras llega la respuesta del servidor.
+  const localList = saveRunToLeaderboard(runEntry);
+  setLeaderboardStatus('Enviando tu marca al ranking mundial…');
+  renderLeaderboardList(localList, runEntry.date);
+
+  // Envío a Supabase y refresco con el ranking global real.
+  const inserted = await submitScore(runEntry);
+  const top = await fetchTopScores();
+
+  if (top) {
+    renderLeaderboardList(top, inserted ? inserted.id : null);
+    setLeaderboardStatus(inserted ? '' : 'No pudimos guardar tu marca online, pero aquí tienes el ranking mundial.');
+  } else {
+    // Supabase no disponible: nos quedamos con el histórico local.
+    setLeaderboardStatus('Sin conexión con el ranking mundial. Mostrando tu histórico local.');
+    renderLeaderboardList(localList, runEntry.date);
+  }
 }
 
-// Pinta el histórico de mejores premios (guardado en este mismo navegador)
-// y marca si la partida recién ganada es un nuevo récord personal.
-function renderLeaderboardList(leaderboard, currentRunEntry) {
+// Resultado del desafío diario en la pantalla final. Llegar aquí en modo
+// diario significa haber vencido a los 3 rivales, incluido el campeón del día.
+function renderDailyResult() {
+  const el = document.getElementById('final-daily');
+  if (!gameState.daily) {
+    el.textContent = '';
+    el.classList.add('hidden');
+    return;
+  }
+  const c = gameState.dailyChallenge || {};
+  const aliasTxt = c.alias ? ` "${c.alias}"` : '';
+  const name = c.name || 'el campeón';
+  const ownRecord = c.name === gameState.player.name && c.alias === gameState.player.alias;
+  el.textContent = ownRecord
+    ? '👑 Has defendido tu propio trono del día. Sigues siendo el campeón.'
+    : `👑 ¡Has destronado a ${name}${aliasTxt}! La corona del desafío de hoy es tuya.`;
+  el.classList.remove('hidden', 'daily-banner-fail');
+  el.classList.add('daily-banner-win');
+}
+
+// Roster de jugadores que han batido el desafío de hoy (pantalla final del
+// modo diario). Deduplica por nombre+apodo quedándose con el mejor premio.
+function renderDailyWinners(winners) {
+  const el = document.getElementById('daily-winners');
+  if (!el) return;
+  if (!winners || !winners.length) {
+    el.innerHTML = '';
+    el.classList.add('hidden');
+    return;
+  }
+  const seen = new Map();
+  winners.forEach((w) => {
+    const key = `${w.name}|${w.alias || ''}`;
+    if (!seen.has(key) || seen.get(key).totalPrize < w.totalPrize) seen.set(key, w);
+  });
+  const list = [...seen.values()].sort((a, b) => b.totalPrize - a.totalPrize);
+
+  const items = list.map((w) => {
+    const aliasTxt = w.alias ? ` "${escapeHtml(w.alias)}"` : '';
+    return `<li><span class="records-name">${escapeHtml(w.name)}${aliasTxt}</span>` +
+      `<span class="records-amount">${formatEuros(w.totalPrize)}</span></li>`;
+  }).join('');
+  el.innerHTML = `<p class="zone-label">Han batido el desafío de hoy (${list.length})</p>` +
+    `<ol class="records-list">${items}</ol>`;
+  el.classList.remove('hidden');
+}
+
+function setLeaderboardStatus(text) {
+  const el = document.getElementById('leaderboard-status');
+  if (!el) return;
+  el.textContent = text || '';
+  el.classList.toggle('hidden', !text);
+}
+
+// Escapa texto de usuario (nombre/apodo) antes de meterlo en innerHTML.
+function escapeHtml(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// Pinta el ranking (global de Supabase o histórico local) y marca la partida
+// recién jugada. `currentId` identifica esa entrada (id de Supabase o fecha
+// local); si es la primera de la lista, se anuncia récord.
+function renderLeaderboardList(entries, currentId) {
   const listEl = document.getElementById('leaderboard-list');
   listEl.innerHTML = '';
 
-  leaderboard.forEach((entry) => {
+  let currentRank = -1;
+  entries.forEach((entry, index) => {
     const li = document.createElement('li');
-    const isCurrentRun = entry === currentRunEntry;
-    if (isCurrentRun) li.classList.add('current-run');
-    li.innerHTML = `<span class="leaderboard-name">${entry.name} "${entry.alias}"</span><span class="leaderboard-amount">${formatEuros(entry.totalPrize)}</span>`;
+    const isCurrentRun = currentId != null && entry.id === currentId;
+    if (isCurrentRun) {
+      li.classList.add('current-run');
+      currentRank = index;
+    }
+    const aliasHtml = entry.alias ? ` "${escapeHtml(entry.alias)}"` : '';
+    const modeTag = entry.mode
+      ? `<span class="leaderboard-mode leaderboard-mode-${entry.mode.toLowerCase()}">${entry.mode === 'FREEZEOUT' ? 'Freezeout' : 'Arcade'}</span>`
+      : '';
+    li.innerHTML =
+      `<span class="leaderboard-name">${escapeHtml(entry.name)}${aliasHtml}</span>` +
+      modeTag +
+      `<span class="leaderboard-amount">${formatEuros(entry.totalPrize)}</span>`;
     listEl.appendChild(li);
   });
 
-  const isNewRecord = leaderboard[0] === currentRunEntry && leaderboard.length > 0;
+  const isNewRecord = currentRank === 0;
   document.getElementById('final-new-record').classList.toggle('hidden', !isNewRecord);
 }
 
