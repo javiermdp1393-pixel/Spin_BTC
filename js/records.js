@@ -8,6 +8,26 @@ const RECORDS_MODES = [
   { key: 'FREEZEOUT', label: 'Freezeout' }
 ];
 
+// Deduplica la lista de ganadores del desafío diario por jugador (nombre+apodo)
+// quedándose con su mejor premio, y ordena de mayor a menor.
+function dedupeDailyWinners(winners) {
+  const seen = new Map();
+  (winners || []).forEach((w) => {
+    const key = `${w.name}|${w.alias || ''}`;
+    if (!seen.has(key) || seen.get(key).totalPrize < w.totalPrize) seen.set(key, w);
+  });
+  return [...seen.values()].sort((a, b) => b.totalPrize - a.totalPrize);
+}
+
+// Filas <li> de una lista ya deduplicada de ganadores del desafío diario.
+function dailyWinnersRowsHtml(list) {
+  return list.map((w) => {
+    const aliasTxt = w.alias ? ` "${escapeHtml(w.alias)}"` : '';
+    return `<li><span class="records-name">${escapeHtml(w.name)}${aliasTxt}</span>` +
+      `<span class="records-amount">${formatEuros(w.totalPrize)}</span></li>`;
+  }).join('');
+}
+
 function renderRecordsWidget(container, initialMode) {
   if (!container) return;
   let mode = initialMode || 'ARCADE';
@@ -16,12 +36,14 @@ function renderRecordsWidget(container, initialMode) {
     '<div class="records-modes" role="tablist"></div>' +
     '<p class="records-champion" aria-live="polite"></p>' +
     '<ol class="records-list"></ol>' +
-    '<p class="records-status hidden"></p>';
+    '<p class="records-status hidden"></p>' +
+    '<div class="records-daily"></div>';
 
   const modesEl = container.querySelector('.records-modes');
   const championEl = container.querySelector('.records-champion');
   const listEl = container.querySelector('.records-list');
   const statusEl = container.querySelector('.records-status');
+  const dailyEl = container.querySelector('.records-daily');
 
   RECORDS_MODES.forEach((m) => {
     const btn = document.createElement('button');
@@ -75,5 +97,23 @@ function renderRecordsWidget(container, initialMode) {
     });
   }
 
+  // Ganadores del desafío diario de HOY. Es independiente del toggle de modo,
+  // así que se carga una sola vez al montar el widget.
+  async function loadDailyWinners() {
+    const winners = await fetchDailyWinners(50);
+    if (winners === null) { dailyEl.innerHTML = ''; return; } // sin conexión: se oculta
+    const list = dedupeDailyWinners(winners);
+    if (!list.length) {
+      dailyEl.innerHTML =
+        '<p class="zone-label">Han batido el desafío diario de hoy</p>' +
+        '<p class="records-daily-empty">Nadie lo ha batido todavía. ¿Serás el primero?</p>';
+      return;
+    }
+    dailyEl.innerHTML =
+      `<p class="zone-label">Han batido el desafío diario de hoy (${list.length})</p>` +
+      `<ol class="records-list">${dailyWinnersRowsHtml(list)}</ol>`;
+  }
+
   load();
+  loadDailyWinners();
 }

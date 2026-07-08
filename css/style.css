@@ -1132,16 +1132,12 @@ h2 {
 /* --- Versión de la app (badge persistente) --- */
 
 .app-version {
-  position: fixed;
-  left: 8px;
-  bottom: 8px;
-  z-index: 50;
+  margin: 16px 0 0;
+  text-align: center;
   font-family: 'Arial', 'Helvetica Neue', sans-serif;
-  font-size: 0.7rem;
-  letter-spacing: 0.04em;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
   color: #6f6878;
-  opacity: 0.7;
-  pointer-events: none;
 }
 
 /* --- Desafío diario: ganadores del día --- */
@@ -1160,4 +1156,24 @@ h2 {
 
 .daily-winners .zone-label {
   margin-bottom: 6px;
+}
+
+/* Sección de ganadores del desafío diario dentro del widget de récords. */
+.records-daily {
+  margin-top: 14px;
+}
+
+.records-daily:empty {
+  display: none;
+}
+
+.records-daily .zone-label {
+  margin-bottom: 6px;
+}
+
+.records-daily-empty {
+  margin: 0;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: #9a93a4;
 }
