@@ -923,3 +923,208 @@ h2 {
 .rival-line:empty {
   display: none;
 }
+
+/* --- Registro: pestañas (INSCRIBIRSE / REGLAS / RECORDS) --- */
+
+.register-tabs {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-start;
+  max-width: 520px;
+  margin: 0 auto 10px;
+  padding: 0 4px;
+}
+
+.reg-tab {
+  flex: 1;
+  padding: 8px 6px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  letter-spacing: 0.04em;
+  color: #b9b0c4;
+  background: #14121a;
+  border: 1px solid #2a2731;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+}
+
+.reg-tab.active {
+  color: #1a1206;
+  background: linear-gradient(180deg, #d4af37, #a67c1e);
+}
+
+.regview {
+  display: none;
+}
+
+.regview.active {
+  display: block;
+}
+
+/* --- Reglas --- */
+
+.rules-modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin: 8px 0 14px;
+}
+
+.rules-mode-btn {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #cabfe0;
+  background: #14121a;
+  border: 1px solid #2a2731;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.rules-mode-btn.active {
+  color: #1a1206;
+  background: linear-gradient(180deg, #d4af37, #a67c1e);
+  border-color: #a67c1e;
+}
+
+.rules-common {
+  text-align: left;
+  font-size: 0.85rem;
+  color: #cfc7d6;
+  border-bottom: 1px solid #201e26;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+}
+
+.rules-body {
+  display: none;
+  text-align: left;
+  font-size: 0.85rem;
+  color: #e8dcc0;
+}
+
+.rules-body.active {
+  display: block;
+}
+
+.rules-body h3 {
+  color: #f4d976;
+  margin: 0 0 8px;
+}
+
+.rules-common ul,
+.rules-body ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.rules-common li,
+.rules-body li {
+  margin-bottom: 5px;
+  line-height: 1.35;
+}
+
+/* --- Widget de récords (registro y bust out) --- */
+
+.records-block {
+  margin-top: 20px;
+  text-align: left;
+}
+
+.records-modes {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.records-mode-btn {
+  padding: 5px 14px;
+  font-size: 0.78rem;
+  font-weight: bold;
+  color: #cabfe0;
+  background: #14121a;
+  border: 1px solid #2a2731;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.records-mode-btn.active {
+  color: #1a1206;
+  background: linear-gradient(180deg, #d4af37, #a67c1e);
+  border-color: #a67c1e;
+}
+
+.records-champion {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  color: #f4d976;
+}
+
+.records-champion strong {
+  color: #ffe89a;
+}
+
+.records-list {
+  list-style: none;
+  counter-reset: records-rank;
+  margin: 0;
+  padding: 0;
+  background: #0e0d12;
+  border: 1px solid #2a2731;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.records-list li {
+  counter-increment: records-rank;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  font-size: 0.85rem;
+  border-bottom: 1px solid #201e26;
+}
+
+.records-list li:last-child {
+  border-bottom: none;
+}
+
+.records-list li::before {
+  content: counter(records-rank) '.';
+  color: #6f6878;
+  font-weight: bold;
+  min-width: 1.4em;
+}
+
+.records-list li.records-empty {
+  color: #8a8194;
+  justify-content: center;
+}
+
+.records-list li.records-empty::before {
+  content: '';
+  min-width: 0;
+}
+
+.records-name {
+  flex: 1;
+  color: #e8dcc0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.records-amount {
+  color: #d4af37;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.records-status {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  font-style: italic;
+  color: #9a93a4;
+}

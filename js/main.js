@@ -176,21 +176,37 @@ function renderLivesHearts(lives, maxLives) {
   return `<span class="hearts">${html}</span> <span class="lives-number">${formatLifeNumber(lives)}</span>`;
 }
 
+function renderPortraitPlaceholder(el, rival) {
+  el.classList.add('is-placeholder', `placeholder-${rival.suit}`);
+  el.innerHTML = `<span class="portrait-symbol">${rival.suitSymbol}</span>`;
+}
+
 function setPortraitElement(el, rival) {
   el.className = el.className.replace(/\s*placeholder-\S+/g, '').replace(/\s*is-placeholder/g, '').trim();
   el.style.backgroundImage = '';
 
-  if (rival.image) {
-    // El retrato se muestra completo (contain) sobre una copia difuminada de
-    // la propia imagen, así el hueco alrededor no muestra un color que
-    // desentone con el fondo del arte de cada personaje.
-    el.innerHTML =
-      `<div class="portrait-blur" style="background-image:url('${rival.image}')"></div>` +
-      `<img class="portrait-img" src="${rival.image}" alt="${rival.name}">`;
-  } else {
-    el.classList.add('is-placeholder', `placeholder-${rival.suit}`);
-    el.innerHTML = `<span class="portrait-symbol">${rival.suitSymbol}</span>`;
+  if (!rival.image) {
+    renderPortraitPlaceholder(el, rival);
+    return;
   }
+
+  // El retrato se muestra completo (contain) sobre una copia difuminada de la
+  // propia imagen, así el hueco alrededor no desentona con el arte. Si la
+  // imagen aún no existe (p. ej. el modelo del campeón del día sin subir), el
+  // onerror cae al placeholder del palo en vez de mostrar un icono roto.
+  const blur = document.createElement('div');
+  blur.className = 'portrait-blur';
+  blur.style.backgroundImage = `url('${rival.image}')`;
+
+  const img = document.createElement('img');
+  img.className = 'portrait-img';
+  img.src = rival.image;
+  img.alt = rival.name;
+  img.onerror = () => renderPortraitPlaceholder(el, rival);
+
+  el.innerHTML = '';
+  el.appendChild(blur);
+  el.appendChild(img);
 }
 
 // --- Pantalla: Registro ---
@@ -216,6 +232,8 @@ document.getElementById('start-button').addEventListener('click', () => {
   gameState.demoMode = access.demo;
   document.getElementById('demo-note').classList.toggle('hidden', !access.demo);
   gameState.status = 'REGISTER';
+  showRegisterView('inscribirse');
+  renderRecordsWidget(document.getElementById('records-register'), 'ARCADE');
   showScreen(gameState.status);
 });
 
@@ -274,17 +292,48 @@ async function startDailyChallengeFlow() {
 
 document.getElementById('daily-button').addEventListener('click', startDailyChallengeFlow);
 
+// --- Pantalla de registro: pestañas (INSCRIBIRSE / REGLAS / RECORDS) ---
+
+function showRegisterView(view) {
+  document.querySelectorAll('#register-screen .reg-tab').forEach((t) => {
+    t.classList.toggle('active', t.dataset.regtab === view);
+  });
+  document.querySelectorAll('#register-screen .regview').forEach((v) => {
+    v.classList.toggle('active', v.id === `regview-${view}`);
+  });
+  // La tabla de récords se (re)carga al abrir su pestaña, para traer lo último.
+  if (view === 'records') renderRecordsWidget(document.getElementById('records-tab'), 'ARCADE');
+}
+
+document.querySelectorAll('#register-screen .reg-tab').forEach((tab) => {
+  tab.addEventListener('click', () => showRegisterView(tab.dataset.regtab));
+});
+
+// Switch de reglas por modo dentro de la pestaña REGLAS.
+document.querySelectorAll('.rules-mode-btn').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const modeKey = btn.dataset.rulesmode;
+    document.querySelectorAll('.rules-mode-btn').forEach((b) => b.classList.toggle('active', b === btn));
+    document.querySelectorAll('.rules-body').forEach((body) => {
+      body.classList.toggle('active', body.id === `rules-${modeKey}`);
+    });
+  });
+});
+
 // --- Pantalla: Intro de rival ---
 
 function renderRivalIntro() {
   const rival = getCurrentRival(gameState);
 
-  // Banner del desafío diario: récord del nº1 que hay que superar.
+  // Banner del desafío diario: progreso del gauntlet (rival X/3, vidas y folds).
   const dailyEl = document.getElementById('rival-intro-daily');
-  if (gameState.daily && gameState.dailyChallenge) {
-    const c = gameState.dailyChallenge;
-    const aliasTxt = c.alias ? ` "${c.alias}"` : '';
-    dailyEl.textContent = `👑 Desafío diario — supera el récord de ${c.name}${aliasTxt}: ${formatEuros(c.totalPrize)}`;
+  if (gameState.daily) {
+    const total = (gameState.rivalLineup && gameState.rivalLineup.length) || 3;
+    const idx = gameState.currentRivalIndex + 1;
+    const folds = gameState.freeFoldsRemaining;
+    dailyEl.textContent = rival.dailyChampion
+      ? `👑 Rival ${idx}/${total} — El campeón del día. ¡Destrónalo para llevarte la corona!`
+      : `👑 Desafío diario · Rival ${idx}/${total} · 3 vidas no recuperables · ${folds} fold${folds === 1 ? '' : 's'} gratis`;
     dailyEl.classList.remove('hidden');
   } else {
     dailyEl.textContent = '';
@@ -486,18 +535,20 @@ function renderRoadmap(containerId) {
   if (!container) return;
   container.innerHTML = '';
 
-  RIVALS.forEach((rival, index) => {
+  const lineup = (gameState.rivalLineup && gameState.rivalLineup.length) ? gameState.rivalLineup : RIVALS;
+  lineup.forEach((rival, index) => {
     const node = document.createElement('div');
     node.className = 'roadmap-node';
 
+    const isBoss = rival.finalBoss || rival.dailyChampion;
     const defeated = index < gameState.currentRivalIndex;
     const current = index === gameState.currentRivalIndex;
-    // Se revela el nombre de: derrotados, el actual y siempre el jefe final.
-    const revealed = defeated || current || rival.finalBoss;
+    // Se revela el nombre de: derrotados, el actual y siempre el jefe/campeón.
+    const revealed = defeated || current || isBoss;
 
     if (defeated) node.classList.add('defeated');
     if (current) node.classList.add('current');
-    if (rival.finalBoss) node.classList.add('boss');
+    if (isBoss) node.classList.add('boss');
 
     const icon = document.createElement('div');
     icon.className = 'roadmap-icon';
@@ -512,7 +563,7 @@ function renderRoadmap(containerId) {
 
     const label = document.createElement('div');
     label.className = 'roadmap-label';
-    label.textContent = revealed ? (rival.finalBoss ? '👑 ' + rival.name : rival.name) : '???';
+    label.textContent = revealed ? (isBoss ? '👑 ' + rival.name : rival.name) : '???';
 
     node.appendChild(icon);
     node.appendChild(label);
@@ -638,6 +689,7 @@ document.getElementById('next-table-button').addEventListener('click', () => {
 function renderBustOut() {
   document.getElementById('bustout-total').textContent = formatEuros(gameState.totalPrize);
   Sound.playMusic('derrota');
+  renderRecordsWidget(document.getElementById('records-bustout'), gameState.mode);
 }
 
 document.getElementById('retry-button').addEventListener('click', () => {
@@ -654,6 +706,15 @@ async function renderFinal() {
   Sound.playMusic('champion');
 
   renderDailyResult();
+
+  // El Desafío diario no puntúa en el ranking mundial (otras reglas): solo se
+  // muestra el top actual del modo Arcade, sin enviar nada.
+  if (gameState.daily) {
+    setLeaderboardStatus('El Desafío diario no cuenta para el ranking mundial.');
+    const topDaily = await fetchTopScores();
+    if (topDaily) renderLeaderboardList(topDaily, null);
+    return;
+  }
 
   const runEntry = {
     name: gameState.player.name,
@@ -684,29 +745,24 @@ async function renderFinal() {
   }
 }
 
-// Resultado del desafío diario en la pantalla final: ¿se ha destronado al
-// récord del nº1? En torneo normal el banner queda oculto.
+// Resultado del desafío diario en la pantalla final. Llegar aquí en modo
+// diario significa haber vencido a los 3 rivales, incluido el campeón del día.
 function renderDailyResult() {
   const el = document.getElementById('final-daily');
-  if (!gameState.daily || !gameState.dailyChallenge) {
+  if (!gameState.daily) {
     el.textContent = '';
     el.classList.add('hidden');
     return;
   }
-  const c = gameState.dailyChallenge;
+  const c = gameState.dailyChallenge || {};
   const aliasTxt = c.alias ? ` "${c.alias}"` : '';
-  if (hasBeatenDailyChallenge(gameState)) {
-    const ownRecord = c.name === gameState.player.name && c.alias === gameState.player.alias;
-    el.textContent = ownRecord
-      ? `👑 ¡Has batido tu propio récord del día con ${formatEuros(gameState.totalPrize)}! La corona sigue siendo tuya.`
-      : `👑 ¡Has destronado a ${c.name}${aliasTxt}! La corona del desafío de hoy es tuya.`;
-    el.classList.remove('hidden', 'daily-banner-fail');
-    el.classList.add('daily-banner-win');
-  } else {
-    el.textContent = `El récord de ${c.name}${aliasTxt} (${formatEuros(c.totalPrize)}) aguanta un día más. Vuelve mañana.`;
-    el.classList.remove('hidden', 'daily-banner-win');
-    el.classList.add('daily-banner-fail');
-  }
+  const name = c.name || 'el campeón';
+  const ownRecord = c.name === gameState.player.name && c.alias === gameState.player.alias;
+  el.textContent = ownRecord
+    ? '👑 Has defendido tu propio trono del día. Sigues siendo el campeón.'
+    : `👑 ¡Has destronado a ${name}${aliasTxt}! La corona del desafío de hoy es tuya.`;
+  el.classList.remove('hidden', 'daily-banner-fail');
+  el.classList.add('daily-banner-win');
 }
 
 function setLeaderboardStatus(text) {

@@ -85,6 +85,27 @@ async function fetchTopScores(limit) {
   }
 }
 
+// Lee el top de un modo concreto (ARCADE | FREEZEOUT) para las tablas de
+// récords. Devuelve una lista normalizada o null si falla la petición.
+async function fetchScoresByMode(mode, limit) {
+  const n = limit || LEADERBOARD_MAX_ENTRIES;
+  try {
+    const res = await fetch(
+      scoresEndpoint(
+        `?select=id,player_name,alias,total_prize,mode,rival_reached,created_at` +
+          `&mode=eq.${encodeURIComponent(mode)}` +
+          `&order=total_prize.desc,created_at.asc&limit=${n}`
+      ),
+      { headers: supabaseHeaders() }
+    );
+    if (!res.ok) return null;
+    const rows = await res.json();
+    return Array.isArray(rows) ? rows.map(normalizeScoreRow) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
 // Lee el rival del desafío diario (el nº1 congelado del día). Devuelve
 // { name, alias, totalPrize, mode, date } o null si falla / no hay fila.
 async function fetchDailyChallenge() {
