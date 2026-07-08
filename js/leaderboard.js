@@ -85,6 +85,32 @@ async function fetchTopScores(limit) {
   }
 }
 
+// Lee el rival del desafío diario (el nº1 congelado del día). Devuelve
+// { name, alias, totalPrize, mode, date } o null si falla / no hay fila.
+async function fetchDailyChallenge() {
+  try {
+    const res = await fetch(
+      `${SUPABASE_CONFIG.url}/rest/v1/daily_challenge` +
+        `?select=challenge_date,player_name,alias,total_prize,mode` +
+        `&order=challenge_date.desc&limit=1`,
+      { headers: supabaseHeaders() }
+    );
+    if (!res.ok) return null;
+    const rows = await res.json();
+    if (!Array.isArray(rows) || !rows.length) return null;
+    const row = rows[0];
+    return {
+      date: row.challenge_date,
+      name: row.player_name,
+      alias: row.alias,
+      totalPrize: row.total_prize,
+      mode: row.mode
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
 // --- Fallback local (offline) ----------------------------------------------
 
 // Todas las lecturas/escrituras van envueltas en try/catch: en modo privado

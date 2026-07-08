@@ -30,6 +30,8 @@ function createInitialState() {
     player: { name: '', alias: '' },
     mode: 'ARCADE', // ARCADE | FREEZEOUT
     demoMode: false, // acceso demo/QA: cada mano elimina al rival
+    daily: false, // desafío diario: hay un récord (el nº1) que superar
+    dailyChallenge: null, // { name, alias, totalPrize, mode, date } a batir
     currentRivalIndex: 0,
     playerLives: PLAYER_STARTING_LIVES,
     rivalLives: 0,
@@ -91,9 +93,25 @@ function roundLife(value) {
 // El primer enfrentamiento se prepara al pulsar "Sentarse a la mesa".
 function startTournament(state, mode) {
   state.mode = mode;
+  state.daily = false;
+  state.dailyChallenge = null;
   state.currentRivalIndex = 0;
   state.totalPrize = 0;
   state.playerLives = mode === 'FREEZEOUT' ? FREEZEOUT.startLives : PLAYER_STARTING_LIVES;
+}
+
+// Arranca el desafío diario: torneo con reglas Arcade en el que además hay que
+// superar el premio del nº1 del leaderboard (rival del día) para llevarse la
+// corona diaria. `challenge` = { name, alias, totalPrize, mode, date }.
+function startDailyChallenge(state, challenge) {
+  startTournament(state, 'ARCADE');
+  state.daily = true;
+  state.dailyChallenge = challenge;
+}
+
+// ¿El premio acumulado supera el récord del rival del día?
+function hasBeatenDailyChallenge(state) {
+  return !!(state.daily && state.dailyChallenge && state.totalPrize > state.dailyChallenge.totalPrize);
 }
 
 // Prepara un nuevo enfrentamiento. En Arcade las vidas se resetean a 3; en
@@ -272,11 +290,13 @@ function advanceToNextRival(state) {
 
 // Reinicia el torneo tras un BUST_OUT, conservando nombre/apodo, modo y demo.
 function restartTournament(state) {
-  const { player, mode, demoMode } = state;
+  const { player, mode, demoMode, daily, dailyChallenge } = state;
   Object.assign(state, createInitialState());
   state.player = player;
   state.mode = mode;
   state.demoMode = demoMode;
+  state.daily = daily;
+  state.dailyChallenge = dailyChallenge;
   state.playerLives = mode === 'FREEZEOUT' ? FREEZEOUT.startLives : PLAYER_STARTING_LIVES;
   state.status = 'RIVAL_INTRO';
 }

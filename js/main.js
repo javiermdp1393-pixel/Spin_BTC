@@ -242,10 +242,55 @@ function startTournamentFlow(mode) {
 document.getElementById('register-button').addEventListener('click', () => startTournamentFlow('ARCADE'));
 document.getElementById('freezeout-button').addEventListener('click', () => startTournamentFlow('FREEZEOUT'));
 
+// Rival del día por defecto si Supabase no responde: la casa (El Pirulas).
+const DEFAULT_DAILY_CHALLENGE = { name: 'El Pirulas', alias: 'Final Hand', totalPrize: 100000, mode: 'ARCADE', date: null };
+
+// Desafío diario: torneo Arcade en el que además hay que superar el premio del
+// nº1 del leaderboard (rival del día, servido por el cron de Supabase).
+async function startDailyChallengeFlow() {
+  const name = document.getElementById('player-name').value.trim();
+  const alias = document.getElementById('player-alias').value.trim();
+  const errorEl = document.getElementById('register-error');
+
+  if (!name || !alias) {
+    errorEl.textContent = 'La mesa necesita tu nombre y tu apodo antes de empezar.';
+    return;
+  }
+
+  errorEl.textContent = '';
+  gameState.player.name = name;
+  gameState.player.alias = alias;
+
+  const dailyButton = document.getElementById('daily-button');
+  dailyButton.disabled = true;
+  const challenge = (await fetchDailyChallenge()) || DEFAULT_DAILY_CHALLENGE;
+  dailyButton.disabled = false;
+
+  startDailyChallenge(gameState, challenge);
+  gameState.status = 'RIVAL_INTRO';
+  renderRivalIntro();
+  showScreen(gameState.status);
+}
+
+document.getElementById('daily-button').addEventListener('click', startDailyChallengeFlow);
+
 // --- Pantalla: Intro de rival ---
 
 function renderRivalIntro() {
   const rival = getCurrentRival(gameState);
+
+  // Banner del desafío diario: récord del nº1 que hay que superar.
+  const dailyEl = document.getElementById('rival-intro-daily');
+  if (gameState.daily && gameState.dailyChallenge) {
+    const c = gameState.dailyChallenge;
+    const aliasTxt = c.alias ? ` "${c.alias}"` : '';
+    dailyEl.textContent = `👑 Desafío diario — supera el récord de ${c.name}${aliasTxt}: ${formatEuros(c.totalPrize)}`;
+    dailyEl.classList.remove('hidden');
+  } else {
+    dailyEl.textContent = '';
+    dailyEl.classList.add('hidden');
+  }
+
   setPortraitElement(document.getElementById('rival-intro-portrait'), rival);
   document.getElementById('rival-intro-name').textContent = rival.name;
   document.getElementById('rival-intro-alias').textContent = rival.alias;
@@ -608,6 +653,8 @@ async function renderFinal() {
   document.getElementById('final-total').textContent = formatEuros(gameState.totalPrize);
   Sound.playMusic('champion');
 
+  renderDailyResult();
+
   const runEntry = {
     name: gameState.player.name,
     alias: gameState.player.alias,
@@ -634,6 +681,31 @@ async function renderFinal() {
     // Supabase no disponible: nos quedamos con el histórico local.
     setLeaderboardStatus('Sin conexión con el ranking mundial. Mostrando tu histórico local.');
     renderLeaderboardList(localList, runEntry.date);
+  }
+}
+
+// Resultado del desafío diario en la pantalla final: ¿se ha destronado al
+// récord del nº1? En torneo normal el banner queda oculto.
+function renderDailyResult() {
+  const el = document.getElementById('final-daily');
+  if (!gameState.daily || !gameState.dailyChallenge) {
+    el.textContent = '';
+    el.classList.add('hidden');
+    return;
+  }
+  const c = gameState.dailyChallenge;
+  const aliasTxt = c.alias ? ` "${c.alias}"` : '';
+  if (hasBeatenDailyChallenge(gameState)) {
+    const ownRecord = c.name === gameState.player.name && c.alias === gameState.player.alias;
+    el.textContent = ownRecord
+      ? `👑 ¡Has batido tu propio récord del día con ${formatEuros(gameState.totalPrize)}! La corona sigue siendo tuya.`
+      : `👑 ¡Has destronado a ${c.name}${aliasTxt}! La corona del desafío de hoy es tuya.`;
+    el.classList.remove('hidden', 'daily-banner-fail');
+    el.classList.add('daily-banner-win');
+  } else {
+    el.textContent = `El récord de ${c.name}${aliasTxt} (${formatEuros(c.totalPrize)}) aguanta un día más. Vuelve mañana.`;
+    el.classList.remove('hidden', 'daily-banner-win');
+    el.classList.add('daily-banner-fail');
   }
 }
 

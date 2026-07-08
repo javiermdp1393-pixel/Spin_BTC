@@ -73,6 +73,20 @@ h2 {
   color: #8a7076;
 }
 
+/* Desafío diario: morado real, distinto de los modos normales. */
+.btn-daily {
+  background: linear-gradient(180deg, #7b4bd6, #4a2a8f);
+  color: #f3ecff;
+  font-weight: bold;
+  box-shadow: 0 0 12px rgba(123, 75, 214, 0.35);
+}
+
+.btn-daily:disabled {
+  background: #2c2440;
+  color: #8a80a6;
+  box-shadow: none;
+}
+
 /* Doblar: naranja de "riesgo/precaución", distinto del oro (CALL) y del rojo (FOLD). */
 .btn-risk {
   background: linear-gradient(180deg, #f0871f, #b05610);
@@ -575,6 +589,31 @@ h2 {
   color: #f4d976;
   text-shadow: 0 0 10px rgba(244, 217, 118, 0.6);
   margin: 4px 0 0;
+}
+
+/* Banner del desafío diario (intro de rival y pantalla final). */
+.daily-banner {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #ecdfff;
+  background: rgba(123, 75, 214, 0.15);
+  border: 1px solid rgba(123, 75, 214, 0.5);
+}
+
+.daily-banner-win {
+  color: #f4d976;
+  background: rgba(212, 175, 55, 0.15);
+  border-color: rgba(212, 175, 55, 0.55);
+  text-shadow: 0 0 10px rgba(244, 217, 118, 0.5);
+}
+
+.daily-banner-fail {
+  color: #d8c8f0;
+  background: rgba(123, 75, 214, 0.1);
+  border-color: rgba(123, 75, 214, 0.4);
 }
 
 .leaderboard {

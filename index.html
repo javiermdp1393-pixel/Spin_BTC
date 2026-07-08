@@ -39,10 +39,12 @@
     <div class="mode-buttons">
       <button id="register-button" class="btn btn-primary">Entrar al Torneo</button>
       <button id="freezeout-button" class="btn btn-danger">Freezeout Mode</button>
+      <button id="daily-button" class="btn btn-daily">Desafío diario 👑</button>
     </div>
     <div class="mode-descriptions">
       <p><strong>Arcade Mode</strong><br />Las vidas se reinician al empezar cada rival.</p>
       <p><strong>Freezeout Mode</strong><br />Las vidas no se reinician. Sobrevive con el mismo stack hasta El Pirulas. Empiezas con 5 vidas, recuperas una por cada rival derrotado y tienes un fold gratis por rival.</p>
+      <p><strong>Desafío diario</strong><br />Torneo Arcade con una misión extra: superar el premio del nº1 del ranking mundial (el rival del día). Si lo bates, te llevas la corona del desafío de hoy.</p>
     </div>
     <p id="demo-note" class="demo-note hidden">🛠️ Modo demo/QA activo — cada mano elimina al rival.</p>
   </div>
@@ -51,6 +53,7 @@
 <!-- 3. INTRO DE RIVAL -->
 <section id="rival-intro-screen" class="screen">
   <div class="panel">
+    <p id="rival-intro-daily" class="daily-banner hidden"></p>
     <div id="rival-intro-portrait" class="portrait portrait-large"></div>
     <h2 id="rival-intro-name"></h2>
     <p id="rival-intro-alias" class="alias"></p>
@@ -153,6 +156,7 @@
     <h2>TENEMOS NUEVO CAMPEÓN</h2>
     <p class="copy">Te has convertido en el campeón de SPINHO BEAT THE CHAMPION. Felicidades.</p>
     <p class="total-prize">Premio total acumulado: <span id="final-total"></span></p>
+    <p id="final-daily" class="daily-banner hidden"></p>
     <p id="final-new-record" class="new-record-banner hidden">¡Nuevo récord personal!</p>
 
     <div class="leaderboard">
