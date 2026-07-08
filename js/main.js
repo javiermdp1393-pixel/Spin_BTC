@@ -800,20 +800,9 @@ function renderDailyWinners(winners) {
     el.classList.add('hidden');
     return;
   }
-  const seen = new Map();
-  winners.forEach((w) => {
-    const key = `${w.name}|${w.alias || ''}`;
-    if (!seen.has(key) || seen.get(key).totalPrize < w.totalPrize) seen.set(key, w);
-  });
-  const list = [...seen.values()].sort((a, b) => b.totalPrize - a.totalPrize);
-
-  const items = list.map((w) => {
-    const aliasTxt = w.alias ? ` "${escapeHtml(w.alias)}"` : '';
-    return `<li><span class="records-name">${escapeHtml(w.name)}${aliasTxt}</span>` +
-      `<span class="records-amount">${formatEuros(w.totalPrize)}</span></li>`;
-  }).join('');
+  const list = dedupeDailyWinners(winners);
   el.innerHTML = `<p class="zone-label">Han batido el desafío de hoy (${list.length})</p>` +
-    `<ol class="records-list">${items}</ol>`;
+    `<ol class="records-list">${dailyWinnersRowsHtml(list)}</ol>`;
   el.classList.remove('hidden');
 }
 
