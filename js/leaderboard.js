@@ -132,6 +132,48 @@ async function fetchDailyChallenge() {
   }
 }
 
+// Registra que un jugador ha batido el Desafío diario de hoy. Devuelve la fila
+// insertada o null si falla. La fecha la pone el servidor (UTC).
+async function submitDailyWin(entry) {
+  try {
+    const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/daily_results`, {
+      method: 'POST',
+      headers: supabaseHeaders({ 'Content-Type': 'application/json', Prefer: 'return=representation' }),
+      body: JSON.stringify({
+        player_name: entry.name,
+        alias: entry.alias || null,
+        total_prize: entry.totalPrize
+      })
+    });
+    if (!res.ok) return null;
+    const rows = await res.json();
+    return Array.isArray(rows) && rows.length ? rows[0] : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+// Lee los jugadores que han batido el Desafío diario de HOY (UTC), mejor premio
+// primero. Devuelve [{ name, alias, totalPrize }] o null si falla.
+async function fetchDailyWinners(limit) {
+  const n = limit || 50;
+  const today = new Date().toISOString().slice(0, 10);
+  try {
+    const res = await fetch(
+      `${SUPABASE_CONFIG.url}/rest/v1/daily_results` +
+        `?select=player_name,alias,total_prize,created_at` +
+        `&challenge_date=eq.${today}&order=total_prize.desc,created_at.asc&limit=${n}`,
+      { headers: supabaseHeaders() }
+    );
+    if (!res.ok) return null;
+    const rows = await res.json();
+    if (!Array.isArray(rows)) return null;
+    return rows.map((r) => ({ name: r.player_name, alias: r.alias, totalPrize: r.total_prize }));
+  } catch (e) {
+    return null;
+  }
+}
+
 // --- Fallback local (offline) ----------------------------------------------
 
 // Todas las lecturas/escrituras van envueltas en try/catch: en modo privado

@@ -11,6 +11,9 @@
 <!-- Botón de silencio (persistente en todas las pantallas) -->
 <button id="mute-button" class="mute-button" type="button" aria-label="Silenciar sonido">🔊</button>
 
+<!-- Versión de la app (persistente) -->
+<div class="app-version">v1.0.1</div>
+
 <!-- 1. PORTADA -->
 <section id="launch-screen" class="screen active">
   <div class="hero-bg" style="background-image: url('assets/cover.jpg');"></div>
@@ -129,6 +132,7 @@
 <section id="rival-intro-screen" class="screen">
   <div class="panel">
     <p id="rival-intro-daily" class="daily-banner hidden"></p>
+    <p id="rival-intro-winners" class="daily-winners-count hidden"></p>
     <div id="rival-intro-portrait" class="portrait portrait-large"></div>
     <h2 id="rival-intro-name"></h2>
     <p id="rival-intro-alias" class="alias"></p>
@@ -237,6 +241,7 @@
     <p class="copy">Te has convertido en el campeón de SPINHO BEAT THE CHAMPION. Felicidades.</p>
     <p class="total-prize">Premio total acumulado: <span id="final-total"></span></p>
     <p id="final-daily" class="daily-banner hidden"></p>
+    <div id="daily-winners" class="daily-winners hidden"></div>
     <p id="final-new-record" class="new-record-banner hidden">¡Nuevo récord personal!</p>
 
     <div class="leaderboard">

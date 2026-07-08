@@ -23,9 +23,17 @@ llevarse la corona del día.
 - RLS: **lectura pública**. Solo escribe `refresh_daily_challenge()` (security
   definer) o el service role.
 
+### `public.daily_results` — ganadores del Desafío diario
+Cada jugador que derrota al campeón del día deja aquí su marca
+(`challenge_date`, `player_name`, `alias`, `total_prize`). El frontend muestra
+el roster de quién ha batido el reto de hoy.
+
+- RLS: **lectura pública** + **inserción anónima validada** (la política exige
+  `challenge_date = hoy (UTC)`, así nadie rellena resultados de otras fechas).
+
 ### `public.refresh_daily_challenge()`
-Coge el nº1 actual de `scores` y lo fija como rival de hoy (UTC). Si no hay
-puntuaciones, deja a El Pirulas (100.000 €) como rival por defecto.
+Coge el nº1 actual de `scores` **del modo ARCADE** y lo fija como rival de hoy
+(UTC). Si no hay puntuaciones, deja a El Pirulas (100.000 €) por defecto.
 
 ## Automatización (pg_cron + pg_net)
 

@@ -263,6 +263,9 @@ document.getElementById('freezeout-button').addEventListener('click', () => star
 // Rival del día por defecto si Supabase no responde: la casa (El Pirulas).
 const DEFAULT_DAILY_CHALLENGE = { name: 'El Pirulas', alias: 'Final Hand', totalPrize: 100000, mode: 'ARCADE', date: null };
 
+// Nº de jugadores que ya han batido el desafío de hoy (se muestra en la intro).
+let dailyWinnersCount = null;
+
 // Desafío diario: torneo Arcade en el que además hay que superar el premio del
 // nº1 del leaderboard (rival del día, servido por el cron de Supabase).
 async function startDailyChallengeFlow() {
@@ -282,6 +285,9 @@ async function startDailyChallengeFlow() {
   const dailyButton = document.getElementById('daily-button');
   dailyButton.disabled = true;
   const challenge = (await fetchDailyChallenge()) || DEFAULT_DAILY_CHALLENGE;
+  // Cuántos jugadores distintos ya han batido el reto de hoy (para la intro).
+  const winners = await fetchDailyWinners(200);
+  dailyWinnersCount = winners ? new Set(winners.map((w) => `${w.name}|${w.alias || ''}`)).size : null;
   dailyButton.disabled = false;
 
   startDailyChallenge(gameState, challenge);
@@ -338,6 +344,16 @@ function renderRivalIntro() {
   } else {
     dailyEl.textContent = '';
     dailyEl.classList.add('hidden');
+  }
+
+  // Cuántos jugadores ya han batido el reto de hoy.
+  const winnersEl = document.getElementById('rival-intro-winners');
+  if (gameState.daily && dailyWinnersCount) {
+    winnersEl.textContent = `🏅 ${dailyWinnersCount} ${dailyWinnersCount === 1 ? 'jugador ya ha' : 'jugadores ya han'} batido el reto de hoy`;
+    winnersEl.classList.remove('hidden');
+  } else {
+    winnersEl.textContent = '';
+    winnersEl.classList.add('hidden');
   }
 
   setPortraitElement(document.getElementById('rival-intro-portrait'), rival);
@@ -707,14 +723,23 @@ async function renderFinal() {
 
   renderDailyResult();
 
-  // El Desafío diario no puntúa en el ranking mundial (otras reglas): solo se
-  // muestra el top actual del modo Arcade, sin enviar nada.
+  // El Desafío diario no puntúa en el ranking mundial (otras reglas). En su
+  // lugar registra que has batido el reto y muestra el roster de ganadores de
+  // hoy, además del top Arcade como referencia.
   if (gameState.daily) {
+    await submitDailyWin({
+      name: gameState.player.name,
+      alias: gameState.player.alias,
+      totalPrize: gameState.totalPrize
+    });
+    const winners = await fetchDailyWinners(50);
+    renderDailyWinners(winners);
     setLeaderboardStatus('El Desafío diario no cuenta para el ranking mundial.');
     const topDaily = await fetchTopScores();
     if (topDaily) renderLeaderboardList(topDaily, null);
     return;
   }
+  document.getElementById('daily-winners').classList.add('hidden');
 
   const runEntry = {
     name: gameState.player.name,
@@ -763,6 +788,33 @@ function renderDailyResult() {
     : `👑 ¡Has destronado a ${name}${aliasTxt}! La corona del desafío de hoy es tuya.`;
   el.classList.remove('hidden', 'daily-banner-fail');
   el.classList.add('daily-banner-win');
+}
+
+// Roster de jugadores que han batido el desafío de hoy (pantalla final del
+// modo diario). Deduplica por nombre+apodo quedándose con el mejor premio.
+function renderDailyWinners(winners) {
+  const el = document.getElementById('daily-winners');
+  if (!el) return;
+  if (!winners || !winners.length) {
+    el.innerHTML = '';
+    el.classList.add('hidden');
+    return;
+  }
+  const seen = new Map();
+  winners.forEach((w) => {
+    const key = `${w.name}|${w.alias || ''}`;
+    if (!seen.has(key) || seen.get(key).totalPrize < w.totalPrize) seen.set(key, w);
+  });
+  const list = [...seen.values()].sort((a, b) => b.totalPrize - a.totalPrize);
+
+  const items = list.map((w) => {
+    const aliasTxt = w.alias ? ` "${escapeHtml(w.alias)}"` : '';
+    return `<li><span class="records-name">${escapeHtml(w.name)}${aliasTxt}</span>` +
+      `<span class="records-amount">${formatEuros(w.totalPrize)}</span></li>`;
+  }).join('');
+  el.innerHTML = `<p class="zone-label">Han batido el desafío de hoy (${list.length})</p>` +
+    `<ol class="records-list">${items}</ol>`;
+  el.classList.remove('hidden');
 }
 
 function setLeaderboardStatus(text) {
