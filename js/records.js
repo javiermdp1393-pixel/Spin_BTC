@@ -19,11 +19,20 @@ function dedupeDailyWinners(winners) {
   return [...seen.values()].sort((a, b) => b.totalPrize - a.totalPrize);
 }
 
-// Filas <li> de una lista ya deduplicada de ganadores del desafío diario.
+// "2026-07-08" -> "08/07" para acompañar cada entrada del salón de la fama.
+function formatDayMonth(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || '');
+  return m ? `${m[3]}/${m[2]}` : '';
+}
+
+// Filas <li> de una lista ya deduplicada de ganadores del desafío diario,
+// incluyendo la fecha del reto batido (salón de la fama).
 function dailyWinnersRowsHtml(list) {
   return list.map((w) => {
     const aliasTxt = w.alias ? ` "${escapeHtml(w.alias)}"` : '';
-    return `<li><span class="records-name">${escapeHtml(w.name)}${aliasTxt}</span>` +
+    const day = formatDayMonth(w.date);
+    const dateTxt = day ? ` <span class="records-date">${day}</span>` : '';
+    return `<li><span class="records-name">${escapeHtml(w.name)}${aliasTxt}${dateTxt}</span>` +
       `<span class="records-amount">${formatEuros(w.totalPrize)}</span></li>`;
   }).join('');
 }
@@ -97,23 +106,23 @@ function renderRecordsWidget(container, initialMode) {
     });
   }
 
-  // Ganadores del desafío diario de HOY. Es independiente del toggle de modo,
-  // así que se carga una sola vez al montar el widget.
-  async function loadDailyWinners() {
-    const winners = await fetchDailyWinners(50);
+  // Salón de la fama del desafío diario (histórico de todos los que lo han
+  // batido). Es independiente del toggle de modo: se carga una vez al montar.
+  async function loadDailyHallOfFame() {
+    const winners = await fetchDailyHallOfFame(20);
     if (winners === null) { dailyEl.innerHTML = ''; return; } // sin conexión: se oculta
     const list = dedupeDailyWinners(winners);
     if (!list.length) {
       dailyEl.innerHTML =
-        '<p class="zone-label">Han batido el desafío diario de hoy</p>' +
+        '<p class="zone-label">Salón de la fama · Desafío diario</p>' +
         '<p class="records-daily-empty">Nadie lo ha batido todavía. ¿Serás el primero?</p>';
       return;
     }
     dailyEl.innerHTML =
-      `<p class="zone-label">Han batido el desafío diario de hoy (${list.length})</p>` +
+      `<p class="zone-label">Salón de la fama · Desafío diario (${list.length})</p>` +
       `<ol class="records-list">${dailyWinnersRowsHtml(list)}</ol>`;
   }
 
   load();
-  loadDailyWinners();
+  loadDailyHallOfFame();
 }

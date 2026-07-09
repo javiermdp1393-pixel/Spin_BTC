@@ -1177,3 +1177,10 @@ h2 {
   font-style: italic;
   color: #9a93a4;
 }
+
+/* Fecha del reto batido en el salón de la fama del desafío diario. */
+.records-date {
+  color: #6f6878;
+  font-size: 0.72rem;
+  font-weight: normal;
+}

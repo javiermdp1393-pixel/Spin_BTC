@@ -154,7 +154,8 @@ async function submitDailyWin(entry) {
 }
 
 // Lee los jugadores que han batido el Desafío diario de HOY (UTC), mejor premio
-// primero. Devuelve [{ name, alias, totalPrize }] o null si falla.
+// primero. Devuelve [{ name, alias, totalPrize }] o null si falla. Se usa para
+// el contador motivacional de la intro ("N ya lo han batido hoy").
 async function fetchDailyWinners(limit) {
   const n = limit || 50;
   const today = new Date().toISOString().slice(0, 10);
@@ -169,6 +170,27 @@ async function fetchDailyWinners(limit) {
     const rows = await res.json();
     if (!Array.isArray(rows)) return null;
     return rows.map((r) => ({ name: r.player_name, alias: r.alias, totalPrize: r.total_prize }));
+  } catch (e) {
+    return null;
+  }
+}
+
+// Salón de la fama del Desafío diario: TODOS los que lo han batido alguna vez
+// (cualquier día), mejor premio primero, con la fecha del reto. Devuelve
+// [{ name, alias, totalPrize, date }] o null si falla.
+async function fetchDailyHallOfFame(limit) {
+  const n = limit || 20;
+  try {
+    const res = await fetch(
+      `${SUPABASE_CONFIG.url}/rest/v1/daily_results` +
+        `?select=player_name,alias,total_prize,challenge_date,created_at` +
+        `&order=total_prize.desc,created_at.asc&limit=${n}`,
+      { headers: supabaseHeaders() }
+    );
+    if (!res.ok) return null;
+    const rows = await res.json();
+    if (!Array.isArray(rows)) return null;
+    return rows.map((r) => ({ name: r.player_name, alias: r.alias, totalPrize: r.total_prize, date: r.challenge_date }));
   } catch (e) {
     return null;
   }
