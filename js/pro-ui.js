@@ -1,18 +1,44 @@
 // Controlador de la UI del Modo Pro (mesa Spin&Go a 3). Usa el motor de pro.js
-// y pinta la pantalla #pro-screen: asientos, bote, comunitarias, acciones del
-// jugador y pacing de la IA. Depende de globals de main.js/leaderboard.js
-// (createCardElement, escapeHtml, showScreen, gameState, Sound, fetch*...).
+// y pinta la pantalla #pro-screen como una mesa de póker: asientos alrededor
+// del tapete, bote y comunitarias en el centro, y tus cartas + acciones abajo.
+// Depende de globals de main.js/poker.js/leaderboard.js.
 
 let proGame = null;
 let proPlayer = { name: '', alias: '' };
-const PRO_AI_DELAY = 800; // ms entre acciones de la IA (legibilidad)
+const PRO_AI_DELAY = 850; // ms entre acciones de la IA (legibilidad)
+const FICHAS_PER_HEART = 20; // los corazones se muestran como fichas enteras
 
-// Formatea corazones/fichas (2 decimales, sin ceros sobrantes): 5, 4.75, 0.2.
-function proNum(v) {
-  return (Math.round(v * 100) / 100).toString();
+let proRenderedBoard = 0;
+let proYourCardsHand = -1;
+let proLastPot = 0;
+
+// Corazones -> fichas (número entero, más legible que 0.25 / 0.75).
+function fichas(h) { return Math.round(h * FICHAS_PER_HEART); }
+
+// --- Combinación actual (para el desplegable de odds) ----------------------
+
+function proKCombos(n, k) {
+  const res = [];
+  const rec = (start, combo) => {
+    if (combo.length === k) { res.push(combo.slice()); return; }
+    for (let i = start; i < n; i++) { combo.push(i); rec(i + 1, combo); combo.pop(); }
+  };
+  rec(0, []);
+  return res;
 }
 
-// Arranca una partida de Modo Pro. Rivales: El Pirulas + campeón del día.
+function proBestHandName(cards) {
+  if (!cards || cards.length < 5) return '';
+  let best = null;
+  for (const combo of proKCombos(cards.length, 5)) {
+    const sc = score5(combo.map((i) => cards[i]));
+    if (!best || compareScores(sc, best) > 0) best = sc;
+  }
+  return describeHand(best);
+}
+
+// --- Arranque ---------------------------------------------------------------
+
 async function startProMode(name, alias) {
   proPlayer = { name, alias };
   const challenge = (await fetchDailyChallenge()) || DEFAULT_DAILY_CHALLENGE;
@@ -26,9 +52,12 @@ async function startProMode(name, alias) {
     { id: 'champ', name: champName, alias: champAlias }
   ]);
 
+  proSetupSeats(champName);
+  proRenderedBoard = 0; proYourCardsHand = -1; proLastPot = 0;
   document.getElementById('pro-result').classList.add('hidden');
   document.getElementById('pro-next-hand').classList.add('hidden');
   document.getElementById('pro-actions').classList.remove('hidden');
+  document.getElementById('pro-odds-detail').classList.add('hidden');
   gameState.status = 'PRO';
   showScreen('PRO');
   Sound.playMusic('mesas');
@@ -37,7 +66,22 @@ async function startProMode(name, alias) {
   driveProUntilHuman();
 }
 
-// --- Pintado ----------------------------------------------------------------
+// Avatares y nombres fijos de la mano (imágenes de los rivales si existen).
+function proSetupSeats() {
+  const avatars = {
+    0: null,
+    1: "url('assets/rivals/el-pirulas.jpg')",
+    2: "url('assets/rivals/daily-champion.png?v=2')"
+  };
+  [0, 1, 2].forEach((i) => {
+    const av = document.getElementById('pro-avatar-' + i);
+    if (!av) return;
+    if (avatars[i]) { av.style.backgroundImage = avatars[i]; av.textContent = ''; }
+    else { av.style.backgroundImage = ''; av.textContent = (proGame.seats[i].name || '?').charAt(0).toUpperCase(); }
+  });
+}
+
+// --- Pintado de la mesa -----------------------------------------------------
 
 function proSeatBadge(i) {
   const g = proGame;
@@ -50,60 +94,81 @@ function proSeatBadge(i) {
 
 function proSeatState(i, s) {
   if (s.out) return 'FUERA';
-  if (!s.inHand) return 'FOLD';
-  if (proGame.status === 'BETTING' && proGame.toAct === i) return 'PIENSA…';
-  return s.lastAction || '';
+  if (!s.inHand) return 'SE RETIRA';
+  if (proGame.status === 'BETTING' && proGame.toAct === i) return 'pensando…';
+  return { PAGA: 'PAGA', SUBE: 'SUBE', FOLD: 'SE RETIRA', 'ALL-IN': 'ALL-IN', CHECK: 'PASA' }[s.lastAction] || '';
 }
 
-function renderProRivalSeat(i) {
-  const el = document.getElementById('pro-seat-' + i);
-  if (!el) return;
-  const s = proGame.seats[i];
-  el.classList.toggle('folded', !s.inHand && !s.out);
-  el.classList.toggle('out', s.out);
-  el.classList.toggle('allin', s.allIn && !s.out);
-  el.classList.toggle('active', proGame.status === 'BETTING' && proGame.toAct === i);
-  const badge = proSeatBadge(i);
-  const bet = s.streetBet > 1e-9 ? `<div class="pro-seat-bet">apuesta ${proNum(s.streetBet)}</div>` : '';
-  el.innerHTML =
-    `<div class="pro-seat-top"><span class="pro-seat-name">${escapeHtml(s.name)}</span>` +
-    (badge ? `<span class="pro-seat-badge">${badge}</span>` : '') + '</div>' +
-    `<div class="pro-seat-hearts">❤ ${proNum(s.hearts)}</div>` +
-    `<div class="pro-seat-state">${proSeatState(i, s)}</div>` +
-    bet;
+function renderProSeat(i) {
+  const g = proGame;
+  const s = g.seats[i];
+  const seatEl = document.getElementById('pro-seat-' + i);
+  if (!seatEl) return;
+
+  seatEl.classList.toggle('folded', !s.inHand && !s.out);
+  seatEl.classList.toggle('out', s.out);
+  seatEl.classList.toggle('allin', s.allIn && !s.out);
+  seatEl.classList.toggle('active', g.status === 'BETTING' && g.toAct === i);
+  const isDealer = i === g.buttonIndex && !s.out;
+  seatEl.classList.toggle('has-dealer', isDealer);
+
+  const nameEl = document.getElementById('pro-name-' + i);
+  if (nameEl) nameEl.textContent = s.name;
+  const badgeEl = document.getElementById('pro-badge-' + i);
+  if (badgeEl) { const b = proSeatBadge(i); badgeEl.textContent = b; badgeEl.classList.toggle('hidden', !b); }
+  const stackEl = document.getElementById('pro-stack-' + i);
+  if (stackEl) stackEl.innerHTML = `<span class="pro-chip-ico"></span>${fichas(s.hearts)}`;
+  const stateEl = document.getElementById('pro-state-' + i);
+  if (stateEl) stateEl.textContent = proSeatState(i, s);
+
+  const betEl = document.getElementById('pro-bet-' + i);
+  if (betEl) {
+    if (s.streetBet > 1e-9) {
+      betEl.innerHTML = `<span class="pro-chip-ico"></span>${fichas(s.streetBet)}`;
+      betEl.classList.remove('hidden');
+    } else {
+      betEl.classList.add('hidden');
+    }
+  }
 }
 
 function renderProBoard() {
   const el = document.getElementById('pro-board');
-  el.innerHTML = '';
-  proGame.board.forEach((c) => el.appendChild(createCardElement(c)));
+  const b = proGame.board;
+  if (b.length < proRenderedBoard) { el.innerHTML = ''; proRenderedBoard = 0; }
+  for (let i = proRenderedBoard; i < b.length; i++) el.appendChild(createCardElement(b[i]));
+  proRenderedBoard = b.length;
 }
 
 const PRO_STREET_LABEL = { PREFLOP: 'PREFLOP', FLOP: 'FLOP', TURN: 'TURN', RIVER: 'RIVER' };
 
 function renderProTable() {
   const g = proGame;
-  renderProRivalSeat(1);
-  renderProRivalSeat(2);
+  [0, 1, 2].forEach(renderProSeat);
 
   document.getElementById('pro-street').textContent =
-    `${PRO_STREET_LABEL[g.street] || ''} · Mano ${g.handNumber} · Ciegas ${proNum(g.blinds.sb)}/${proNum(g.blinds.bb)}`;
-  document.getElementById('pro-pot').innerHTML = `BOTE&nbsp;&nbsp;❤ ${proNum(g.pot)}`;
+    `${PRO_STREET_LABEL[g.street] || ''} · Mano ${g.handNumber} · Ciegas ${fichas(g.blinds.sb)}/${fichas(g.blinds.bb)}`;
+
+  const potEl = document.getElementById('pro-pot');
+  potEl.innerHTML = `BOTE <span class="pro-chip-ico"></span>${fichas(g.pot)}`;
+  if (g.pot > proLastPot + 1e-9) { potEl.classList.remove('pro-pot-bump'); void potEl.offsetWidth; potEl.classList.add('pro-pot-bump'); }
+  proLastPot = g.pot;
+
   renderProBoard();
 
-  const you = g.seats[0];
-  document.getElementById('pro-you-name').textContent = `${you.name}${you.alias ? ` "${you.alias}"` : ''}`;
-  document.getElementById('pro-you-badge').textContent = proSeatBadge(0);
-  document.getElementById('pro-you-hearts').innerHTML = `❤ ${proNum(you.hearts)}`;
-  const yb = document.getElementById('pro-you-bet');
-  yb.textContent = you.streetBet > 1e-9 ? `apuesta ${proNum(you.streetBet)}` : '';
-
-  const cards = document.getElementById('pro-your-cards');
-  cards.innerHTML = '';
-  you.hole.forEach((c) => cards.appendChild(createCardElement(c)));
+  // tus cartas (solo se re-reparten al cambiar de mano, para animar una vez)
+  if (proYourCardsHand !== g.handNumber) {
+    const cards = document.getElementById('pro-your-cards');
+    cards.innerHTML = '';
+    g.seats[0].hole.forEach((c) => cards.appendChild(createCardElement(c)));
+    proYourCardsHand = g.handNumber;
+    // limpia cartas reveladas de rivales de la mano anterior
+    document.getElementById('pro-cards-1').innerHTML = '';
+    document.getElementById('pro-cards-2').innerHTML = '';
+  }
 }
 
-// --- Bucle de juego (pacing IA) --------------------------------------------
+// --- Bucle de juego (pacing de la IA) --------------------------------------
 
 function driveProUntilHuman() {
   if (!proGame) return;
@@ -111,11 +176,12 @@ function driveProUntilHuman() {
   const g = proGame;
   if (g.status === 'HAND_OVER') return showProHandOver();
   if (g.status === 'GAME_OVER') return showProGameOver();
-  // BETTING
   if (g.toAct === 0) return showProHumanTurn();
-  // turno de un rival: se muestra con delay para poder seguirlo
+
   setProActionsEnabled(false);
-  document.getElementById('pro-msg').textContent = `${g.seats[g.toAct].name} piensa…`;
+  document.getElementById('pro-odds').classList.add('hidden');
+  document.getElementById('pro-odds-detail').classList.add('hidden');
+  document.getElementById('pro-msg').textContent = `Turno de ${g.seats[g.toAct].name}…`;
   setTimeout(() => {
     if (!proGame || proGame !== g) return;
     const legal = legalProActions(g);
@@ -129,58 +195,65 @@ function showProHumanTurn() {
   const you = g.seats[0];
   const legal = legalProActions(g);
   const nOpp = seatsInHand(g).filter((s) => s !== you).length;
-  const eq = multiwayEquity(you.hole, g.board, nOpp, 200);
-  document.getElementById('pro-odds').textContent = `Tu probabilidad de ganar: ${Math.round(eq * 100)}%`;
-  document.getElementById('pro-msg').textContent = 'Te toca';
+  const eq = multiwayEquity(you.hole, g.board, nOpp, 220);
+  const pct = Math.round(eq * 100);
+
+  const handName = g.board.length >= 3 ? proBestHandName([...you.hole, ...g.board]) : '';
+  const oddsBtn = document.getElementById('pro-odds');
+  oddsBtn.classList.remove('hidden');
+  oddsBtn.textContent = handName ? `${handName} · ${pct}% de ganar ▾` : `${pct}% de ganar ▾`;
+  const detail = document.getElementById('pro-odds-detail');
+  detail.textContent = handName
+    ? `Tu mejor mano ahora: ${handName}. Probabilidad estimada de ganar la mano: ${pct}%.`
+    : `Preflop (aún sin comunitarias). Probabilidad estimada con tus dos cartas: ${pct}%.`;
+  detail.classList.add('hidden');
+
+  document.getElementById('pro-msg').textContent = '👉 TU TURNO';
 
   const labels = {
-    CHECK: 'CHECK',
-    CALL: (a) => `PAGAR ${proNum(a.amount)}`,
-    RAISE: (a) => `DOBLAR a ${proNum(a.to)}`,
-    FOLD: 'FOLD',
-    ALLIN: (a) => `ALL-IN ${proNum(a.amount)}`
+    CHECK: () => 'PASAR',
+    CALL: (a) => `PAGAR ${fichas(a.amount)}`,
+    RAISE: (a) => `SUBIR a ${fichas(a.to)}`,
+    FOLD: () => 'RETIRARSE',
+    ALLIN: (a) => `ALL-IN ${fichas(a.amount)}`
   };
   document.querySelectorAll('#pro-actions button[data-pro]').forEach((btn) => {
-    const type = btn.dataset.pro;
-    const a = legal.find((x) => x.type === type);
+    const a = legal.find((x) => x.type === btn.dataset.pro);
     if (!a) { btn.classList.add('hidden'); btn.disabled = true; return; }
     btn.classList.remove('hidden');
     btn.disabled = false;
-    const lab = labels[type];
-    btn.textContent = typeof lab === 'function' ? lab(a) : lab;
+    btn.textContent = labels[btn.dataset.pro](a);
   });
 }
 
 function setProActionsEnabled(on) {
   document.querySelectorAll('#pro-actions button[data-pro]').forEach((b) => { b.disabled = !on; });
-  if (!on) document.getElementById('pro-odds').textContent = '';
 }
 
 function showProHandOver() {
   const g = proGame;
   setProActionsEnabled(false);
   document.getElementById('pro-actions').classList.add('hidden');
+  document.getElementById('pro-odds').classList.add('hidden');
+  document.getElementById('pro-odds-detail').classList.add('hidden');
   const lh = g.lastHand;
 
-  // Enseña las cartas de los rivales que llegaron al showdown.
   if (lh && lh.showdown) {
     lh.showdown.forEach((sd) => {
       const idx = g.seats.findIndex((s) => s.id === sd.id);
-      if (idx === 1 || idx === 2) {
-        const el = document.getElementById('pro-seat-' + idx);
-        const row = document.createElement('div');
-        row.className = 'pro-seat-cards card-row';
+      const row = document.getElementById('pro-cards-' + idx);
+      if (row && (idx === 1 || idx === 2)) {
+        row.innerHTML = '';
         sd.hole.forEach((c) => row.appendChild(createCardElement(c)));
-        el.appendChild(row);
       }
     });
   }
 
   const winnerNames = lh.winners.map((id) => g.seats.find((s) => s.id === id).name).join(' y ');
-  let msg = `${winnerNames} se lleva el bote`;
+  let msg = `🏆 ${winnerNames} se lleva el bote`;
   if (lh && lh.showdown) {
     const w = lh.showdown.find((sd) => lh.winners.includes(sd.id));
-    if (w) msg = `${winnerNames} gana con ${w.hand}`;
+    if (w) msg = `🏆 ${winnerNames} gana con ${w.hand}`;
   }
   document.getElementById('pro-msg').textContent = msg;
   document.getElementById('pro-next-hand').classList.remove('hidden');
@@ -202,6 +275,8 @@ async function showProGameOver() {
   setProActionsEnabled(false);
   document.getElementById('pro-actions').classList.add('hidden');
   document.getElementById('pro-next-hand').classList.add('hidden');
+  document.getElementById('pro-odds').classList.add('hidden');
+  document.getElementById('pro-odds-detail').classList.add('hidden');
 
   const win = g.result === 'WIN';
   document.getElementById('pro-result-title').textContent = win ? '¡HAS GANADO EL PRO!' : 'FUERA DEL PRO';
@@ -215,7 +290,7 @@ async function showProGameOver() {
     await submitProWin({ name: proPlayer.name, alias: proPlayer.alias, hands: g.handNumber });
     hofEl.innerHTML = proHofHtml(await fetchProHallOfFame(20));
   } else {
-    msgEl.textContent = 'Te has quedado sin corazones. La próxima vez será.';
+    msgEl.textContent = 'Te has quedado sin fichas. La próxima vez será.';
     Sound.playMusic('derrota');
     hofEl.innerHTML = '';
   }
@@ -231,9 +306,15 @@ document.getElementById('pro-actions').addEventListener('click', (e) => {
   const action = legal.find((a) => a.type === btn.dataset.pro);
   if (!action) return;
   setProActionsEnabled(false);
+  document.getElementById('pro-odds').classList.add('hidden');
+  document.getElementById('pro-odds-detail').classList.add('hidden');
   Sound.playDeal();
   applyProAction(proGame, action);
   driveProUntilHuman();
+});
+
+document.getElementById('pro-odds').addEventListener('click', () => {
+  document.getElementById('pro-odds-detail').classList.toggle('hidden');
 });
 
 document.getElementById('pro-next-hand').addEventListener('click', () => {
