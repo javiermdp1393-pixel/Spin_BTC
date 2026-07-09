@@ -1,7 +1,6 @@
 # Modo Pro (v1.1) — Spin&Go a 3 · Especificación
 
-> Estado: **borrador para revisar**. Los puntos marcados con ⚠️ son supuestos
-> que hay que confirmar antes de construir. El winrate se calibrará por
+> Estado: **diseño cerrado**. El winrate objetivo es **~10%** y se calibrará por
 > simulación Monte Carlo (como el Desafío diario).
 
 ## 1. Concepto
@@ -22,7 +21,7 @@ con rondas de apuestas reales. Los corazones funcionan como **fichas**.
   que **rotan** cada mano.
 - Ciegas forzadas en el preflop:
   - **SB = 1/5** de corazón.
-  - **BB = 1/4** de corazón. ⚠️ (confirmar; BB > SB)
+  - **BB = 1/4** de corazón.
   - Botón: no postea.
 
 ## 3. Economía (corazones = fichas, suma cero)
@@ -36,13 +35,12 @@ con rondas de apuestas reales. Los corazones funcionan como **fichas**.
   | Calle | Unidad de apuesta |
   |---|---|
   | Preflop | igualar la BB (1/4) |
-  | Flop | 1/5 ⚠️ |
+  | Flop | 1/5 |
   | Turn | 1/4 |
-  | River | 1/4 ⚠️ |
+  | River | 1/4 |
 - **Vidas de inicio: 5** corazones cada jugador.
-- **Escalada (partidas largas)**: a partir de la **mano 5**, ciegas y apuestas
-  mínimas **suben +1/4** para acelerar de forma orgánica. ⚠️ (confirmar alcance:
-  ¿solo ciegas, o también river/showdown y todas las calles?)
+- **Escalada**: a partir de la **mano 5**, **solo las ciegas** suben +1/4 (SB y
+  BB), para acelerar de forma orgánica sin tocar las apuestas de cada calle.
 
 ## 4. Ronda de apuestas por calle
 
@@ -59,9 +57,8 @@ Una calle termina cuando todos los activos han igualado la mayor apuesta (o han
 pasado en cadena). Tras el river hay **showdown**: gana la mejor mano de 5; en
 empate se reparte el bote.
 
-⚠️ **All-in y botes secundarios**: cuando alguien va all-in con stack distinto,
-hay que decidir entre lógica de **side pots** real o una simplificación (igualar
-solo hasta el stack menor). Propuesta: side pots simples.
+**All-in con stacks distintos**: se simplifica igualando **solo hasta el stack
+menor** (sin botes secundarios complejos); el sobrante no cubierto se devuelve.
 
 ## 5. IA de los rivales (por equity)
 
@@ -72,14 +69,18 @@ resto + board):
 - **< 25%** → **FOLD** si hay apuesta que pagar; **CHECK** si es gratis.
 - **25%–60%** → van a **turn y river**: pagan/pasan, sin subir fuerte.
 - **> 60%** → **ALL-IN**.
-
-⚠️ (confirmar: si un rival 25–60% recibe un all-in, ¿paga o foldea?)
+- **Frente a un ALL-IN**: el rival **paga si su equity ≥ 40%**, **foldea si es
+  menor** (regla propia para responder a un all-in).
 
 ## 6. Recompensa / satélite (sin sistema de usuarios)
 
 - **Bonus x2 al siguiente Arcade**: al ganar el Pro se guarda un "ticket x2" en
-  `localStorage`; la próxima run de Arcade lo detecta, **aplica x2 al prize
-  money** y lo consume. *Limitación honesta*: es por-dispositivo y borrable.
+  `localStorage`. **No caduca**. En la próxima run de Arcade **duplica el prize
+  money de toda la run** y se consume al terminarla.
+  - **Excepción**: los **jackpots/pelotazos** de la ruleta (JACKPOT ×1000,
+    MEGA ×200/×100/×50) **se mantienen tal cual** (no se les aplica el x2); un
+    ×2000 sería una locura. El x2 solo dobla los premios **normales** (×2–×10).
+  - *Limitación honesta*: es por-dispositivo y borrable (localStorage).
 - **Salón de la fama del Pro**: tabla `pro_results` en Supabase (misma idea que
   `daily_results`), histórico global de quién se ha pasado el modo Pro.
 
@@ -98,14 +99,14 @@ resto + board):
 
 ## 8. Calibración
 
-Objetivo de winrate: **similar a los otros modos (≤ ~15%)**. Se ajustará por
-simulación (vidas de inicio, tamaño de ciegas/apuestas, umbrales de la IA).
+Objetivo de winrate: **~10%**. Se ajustará por simulación (vidas de inicio,
+tamaño de ciegas/apuestas, umbrales de la IA).
 
-## 9. Preguntas abiertas (⚠️)
+## 9. Fases de construcción
 
-1. **BB = 1/4** (confirmar).
-2. Apuestas mínimas de **flop (1/5)** y **river (1/4)**.
-3. Alcance de la **escalada** desde la mano 5 (¿ciegas y todas las calles +1/4?).
-4. Rival 25–60% frente a un **all-in**: ¿paga o foldea?
-5. **Side pots** reales o simplificación al stack menor.
-6. Ticket **x2**: ¿un solo uso? ¿caduca? ¿se acumula con jackpots de la ruleta?
+1. **Motor** headless (manos, calles, apuestas, all-in, showdown, transferencia
+   de corazones, eliminación) + harness de simulación.
+2. **IA** por equity y calibración del winrate a ~10%.
+3. **UI** de la mesa de 3 + pacing de la acción.
+4. **Recompensa**: ticket x2 en localStorage + tabla `pro_results` y salón de la
+   fama en Supabase.
