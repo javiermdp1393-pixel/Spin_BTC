@@ -8,13 +8,13 @@ const FOLD_LIFE_COST = 1 / 4;
 // entero de daño extra al rival.
 const STREAK_ACTIVE_THRESHOLD = 3;
 
-// Ajustes del modo Freezeout (torneo a un solo stack). Los valores de
-// dificultad (skill y vidas extra de los rivales) están calibrados por
-// simulación para dejar la victoria óptima en ~4-5%, la mitad del arcade.
+// Ajustes del modo Freezeout (torneo a un solo stack). Recuperar media vida
+// (no una entera) por rival evita que el colchón de vida haga el modo
+// demasiado asequible; calibrado por simulación (victoria óptima ~1-3%).
 const FREEZEOUT = {
   startLives: 5,
   maxLives: 5,
-  lifePerWin: 1, // vida recuperada al derrotar a un rival (hasta maxLives)
+  lifePerWin: 0.5, // media vida recuperada al derrotar a un rival (hasta maxLives)
   freeFolds: 1, // folds gratis por rival (no acumulables)
   skillMultiplier: 1.8, // rivales más afilados
   extraRivalLives: 1 // rivales con una vida más
@@ -346,7 +346,7 @@ function applyRewardForCurrentRival(state) {
   return reward;
 }
 
-// Avanza al siguiente rival. En Freezeout recupera una vida (hasta el máximo);
+// Avanza al siguiente rival. En Freezeout recupera media vida (hasta el máximo);
 // en el Desafío diario no hay recuperación (stack único no recuperable).
 function advanceToNextRival(state) {
   if (isFreezeout(state)) {
