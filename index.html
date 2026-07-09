@@ -42,7 +42,7 @@
       <input id="player-name" type="text" maxlength="24" placeholder="Tu nombre" />
       <label for="player-alias">Poker nickname</label>
       <input id="player-alias" type="text" maxlength="24" placeholder="Tu apodo de torneo" />
-      <p class="rules-summary">Antes de retar al campeón deberás vencer a cinco rivales, cada uno más peligroso que el anterior. Empiezas cada mesa con 3 vidas: si pierdes una mano, el rival te quita 1 vida; si decides no ir a por ella (foldear), pierdes 1/4 de vida. Y si lo ves claro puedes <strong>Doblar</strong>: pones 2 vidas en juego (ganas o pierdes el doble), solo disponible con 2 vidas o más. Consulta la pestaña <strong>REGLAS</strong> para el detalle de cada modo.</p>
+      <p class="rules-summary">Vence a los rivales para llegar al campeón. El detalle de cada modo está en la pestaña <strong>REGLAS</strong>.</p>
       <p id="register-error" class="error-text"></p>
       <div class="mode-buttons">
         <button id="register-button" class="btn btn-primary">Entrar al Torneo</button>
@@ -51,10 +51,10 @@
         <button id="pro-button" class="btn btn-pro">Modo Pro ♠</button>
       </div>
       <div class="mode-descriptions">
-        <p><strong>Arcade Mode</strong><br />Las vidas se reinician al empezar cada rival.</p>
-        <p><strong>Freezeout Mode</strong><br />Las vidas no se reinician. Sobrevive con el mismo stack hasta El Pirulas. Empiezas con 5 vidas, recuperas media vida por cada rival derrotado y tienes un fold gratis por rival.</p>
-        <p><strong>Desafío diario</strong><br />Gauntlet de 3 rivales con 3 vidas no recuperables: 2 rivales al azar y el campeón del día (el nº1 del ranking Arcade). Derrótalo para llevarte la corona.</p>
-        <p><strong>Modo Pro</strong><br />Póker de verdad por calles en mesa Spin&amp;Go a 3 (tú, El Pirulas y el campeón del día). Apuestas, faroles y all-in. Gánalo y llévate un x2 para tu próximo Arcade.</p>
+        <p><strong>Arcade</strong> · Vidas frescas en cada rival.</p>
+        <p><strong>Freezeout</strong> · Un único stack hasta El Pirulas. Más difícil.</p>
+        <p><strong>Desafío diario</strong> · 3 rivales, 3 vidas, corona diaria en juego.</p>
+        <p><strong>Modo Pro</strong> · Póker real por calles en mesa a 3.</p>
       </div>
       <p id="demo-note" class="demo-note hidden">🛠️ Modo demo/QA activo — cada mano elimina al rival.</p>
 
@@ -127,7 +127,7 @@
         </ul>
       </div>
 
-      <p class="app-version">SPINHO BEAT THE CHAMPION · v1.1</p>
+      <p class="app-version">SPINHO BEAT THE CHAMPION · v1.1.1</p>
     </div>
   </div>
 
@@ -324,7 +324,7 @@
       <button class="btn btn-primary" data-pro="CALL" type="button">PAGAR</button>
       <button class="btn btn-risk" data-pro="RAISE" type="button">SUBIR</button>
       <button class="btn btn-danger" data-pro="FOLD" type="button">RETIRARSE</button>
-      <button class="btn btn-danger" data-pro="ALLIN" type="button">ALL-IN</button>
+      <button class="btn btn-allin" data-pro="ALLIN" type="button">ALL-IN</button>
     </div>
     <button id="pro-next-hand" class="btn btn-primary hidden" type="button">Siguiente mano</button>
   </div>
