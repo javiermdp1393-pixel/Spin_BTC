@@ -101,19 +101,14 @@ function renderCardRow(containerId, cards, animate) {
 function renderCommunityCards(cards, animate) {
   const container = document.getElementById('battle-community-cards');
   container.innerHTML = '';
-  const rows = [cards.slice(0, 3), cards.slice(3, 5)];
-  let dealIndex = 0;
-  rows.forEach((rowCards) => {
-    const row = document.createElement('div');
-    row.className = 'card-row';
-    rowCards.forEach((card) => {
-      const el = createCardElement(card);
-      if (animate) applyDealAnimation(el, dealIndex);
-      dealIndex++;
-      row.appendChild(el);
-    });
-    container.appendChild(row);
+  const row = document.createElement('div');
+  row.className = 'card-row';
+  cards.forEach((card, dealIndex) => {
+    const el = createCardElement(card);
+    if (animate) applyDealAnimation(el, dealIndex);
+    row.appendChild(el);
   });
+  container.appendChild(row);
 }
 
 // Animación de "reparto": la carta cae con un pequeño retardo escalonado.

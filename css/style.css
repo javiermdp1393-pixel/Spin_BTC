@@ -356,14 +356,6 @@ h2 {
   min-height: 102px;
 }
 
-/* Mesa: 5 comunitarias en dos filas (3 + 2). */
-.community-cards {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 7px;
-}
-
 .community-cards .card-row {
   min-height: 0;
 }
@@ -382,6 +374,9 @@ h2 {
   position: relative;
   width: 66px;
   height: 98px;
+  font-size: 16px; /* base de escala: el interior (esquinas/pips) se mide en
+    em relativo a esto, así una carta compacta solo necesita achicar width/
+    height/font-size juntos y todo el contenido reescala proporcionalmente. */
   background: linear-gradient(180deg, #fffdf7, #f3ecda);
   border: 1px solid #d8cfb4;
   border-radius: 7px;
@@ -398,9 +393,9 @@ h2 {
 
 .card-corner {
   position: absolute;
-  top: 3px;
-  left: 3px;
-  font-size: 0.58rem;
+  top: 0.19em;
+  left: 0.19em;
+  font-size: 0.58em;
   font-weight: bold;
   line-height: 1.05;
   text-align: center;
@@ -410,15 +405,15 @@ h2 {
 .card-corner.corner-bottom {
   top: auto;
   left: auto;
-  bottom: 3px;
-  right: 3px;
+  bottom: 0.19em;
+  right: 0.19em;
   transform: rotate(180deg);
 }
 
 .card-center {
   position: absolute;
   inset: 0;
-  padding: 17px 4px 4px;
+  padding: 1.06em 0.25em 0.25em;
 }
 
 .card-center.center-pips {
@@ -432,7 +427,7 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.62rem;
+  font-size: 0.62em;
   line-height: 1;
 }
 
@@ -440,7 +435,7 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.7rem;
+  font-size: 1.7em;
 }
 
 .card-center.center-face {
@@ -448,16 +443,16 @@ h2 {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 0.12em;
 }
 
 .card-center.center-face .face-letter {
-  font-size: 1.5rem;
+  font-size: 1.5em;
   font-weight: bold;
 }
 
 .card-center.center-face .face-suit {
-  font-size: 0.85rem;
+  font-size: 0.85em;
 }
 
 .card-back {
@@ -945,6 +940,15 @@ h2 {
   display: none;
 }
 
+/* Estos textos reservan alto (min-height) para no saltar al aparecer, pero
+   cuando están realmente vacíos (la mayor parte de la mano) es alto muerto:
+   se colapsan del todo para no forzar scroll de más en pantallas cortas. */
+.result-message:empty,
+.reveal-caption:empty,
+.double-hint:empty {
+  display: none;
+}
+
 /* --- Registro: pestañas (INSCRIBIRSE / REGLAS / RECORDS) --- */
 
 .register-tabs {
@@ -1372,3 +1376,45 @@ h2 {
 }
 .pro-result .panel { max-width: 440px; }
 #pro-result-title { color: #f4d976; }
+
+/* --- Combate (Arcade/Freezeout/Diario): compactación para evitar scroll ---
+   Naipes más pequeños (escalan proporcionalmente vía em, ver ".card") y
+   comunitarias en una sola fila (como en la mesa Pro), además de paddings
+   más ajustados en el tapete y los asientos. Reduce sensiblemente el alto
+   total de la pantalla sin perder el estilo de mesa. */
+
+#battle-screen .card {
+  width: 50px;
+  height: 74px;
+  font-size: 12px;
+}
+
+#battle-screen .battle-layout {
+  padding: 10px 10px;
+  gap: 8px;
+}
+
+#battle-screen .pro-like-seat {
+  padding: 8px 10px;
+}
+
+#battle-screen .card-row {
+  min-height: 78px;
+  gap: 5px;
+}
+
+#battle-screen .portrait-small {
+  height: 84px;
+  width: 84px;
+  font-size: 2rem;
+  margin-bottom: 2px;
+}
+
+#battle-screen .battle-actions .btn {
+  padding: 11px 26px;
+  margin: 4px;
+}
+
+#battle-screen.screen {
+  padding: 12px 16px;
+}
