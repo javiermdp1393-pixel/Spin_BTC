@@ -196,6 +196,46 @@ async function fetchDailyHallOfFame(limit) {
   }
 }
 
+// Registra que un jugador se ha pasado el Modo Pro. Devuelve la fila insertada
+// o null si falla. `hands` = nº de manos que tardó (opcional).
+async function submitProWin(entry) {
+  try {
+    const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/pro_results`, {
+      method: 'POST',
+      headers: supabaseHeaders({ 'Content-Type': 'application/json', Prefer: 'return=representation' }),
+      body: JSON.stringify({
+        player_name: entry.name,
+        alias: entry.alias || null,
+        hands: entry.hands != null ? entry.hands : null
+      })
+    });
+    if (!res.ok) return null;
+    const rows = await res.json();
+    return Array.isArray(rows) && rows.length ? rows[0] : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+// Salón de la fama del Modo Pro: histórico de quién se lo ha pasado, más
+// reciente primero. Devuelve [{ name, alias, hands, date }] o null si falla.
+async function fetchProHallOfFame(limit) {
+  const n = limit || 20;
+  try {
+    const res = await fetch(
+      `${SUPABASE_CONFIG.url}/rest/v1/pro_results` +
+        `?select=player_name,alias,hands,created_at&order=created_at.desc&limit=${n}`,
+      { headers: supabaseHeaders() }
+    );
+    if (!res.ok) return null;
+    const rows = await res.json();
+    if (!Array.isArray(rows)) return null;
+    return rows.map((r) => ({ name: r.player_name, alias: r.alias, hands: r.hands, date: (r.created_at || '').slice(0, 10) }));
+  } catch (e) {
+    return null;
+  }
+}
+
 // --- Fallback local (offline) ----------------------------------------------
 
 // Todas las lecturas/escrituras van envueltas en try/catch: en modo privado

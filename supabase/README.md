@@ -31,6 +31,12 @@ el roster de quién ha batido el reto de hoy.
 - RLS: **lectura pública** + **inserción anónima validada** (la política exige
   `challenge_date = hoy (UTC)`, así nadie rellena resultados de otras fechas).
 
+### `public.pro_results` — salón de la fama del Modo Pro
+Cada jugador que se pasa el Modo Pro (último en pie en la mesa Spin&Go a 3) deja
+aquí su marca (`player_name`, `alias`, `hands`). El frontend muestra el histórico.
+
+- RLS: **lectura pública** + **inserción anónima validada**.
+
 ### `public.refresh_daily_challenge()`
 Coge el nº1 actual de `scores` **del modo ARCADE** y lo fija como rival de hoy
 (UTC). Si no hay puntuaciones, deja a El Pirulas (100.000 €) por defecto.

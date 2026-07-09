@@ -38,7 +38,9 @@ con rondas de apuestas reales. Los corazones funcionan como **fichas**.
   | Flop | 1/5 |
   | Turn | 1/4 |
   | River | 1/4 |
-- **Vidas de inicio: 5** corazones cada jugador.
+- **Vidas de inicio**: tú **5** corazones; los rivales (campeones) **8** cada
+  uno. Arrancan más profundos para subir la dificultad **sin darles skill**
+  (juegan su mano real). Es la palanca de dificultad del modo.
 - **Escalada**: a partir de la **mano 5**, **solo las ciegas** suben +1/4 (SB y
   BB), para acelerar de forma orgánica sin tocar las apuestas de cada calle.
 
@@ -99,8 +101,13 @@ resto + board):
 
 ## 8. Calibración
 
-Objetivo de winrate: **~10%**. Se ajustará por simulación (vidas de inicio,
-tamaño de ciegas/apuestas, umbrales de la IA).
+Rivales con stack **8** vs **5** del jugador, **sin skill**. El winrate real
+depende mucho de cómo de bien lea el jugador su equity: en simulación va de
+**~20% a ~30%** (bot con lectura ruidosa vs bot que estima bien). Es el suelo
+realista de una mesa de 3 justa (al final se forma un heads-up); bajar más
+exigiría dar ventaja de skill a los rivales, descartado para mantener el póker
+puro. **Palanca de dificultad**: `PRO.rivalStartHearts` (subirlo lo endurece,
+con rendimientos decrecientes).
 
 ## 9. Fases de construcción
 

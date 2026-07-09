@@ -10,7 +10,8 @@ const SCREEN_IDS = {
   BATTLE: 'battle-screen',
   REWARD: 'reward-screen',
   BUST_OUT: 'bust-out-screen',
-  FINAL: 'final-screen'
+  FINAL: 'final-screen',
+  PRO: 'pro-screen'
 };
 
 // Disposición de los pips centrales de las cartas numéricas, en una rejilla
@@ -252,6 +253,8 @@ function startTournamentFlow(mode) {
   gameState.player.name = name;
   gameState.player.alias = alias;
   startTournament(gameState, mode);
+  // Bonus x2 del Modo Pro: solo aplica (y se consume) en una run de Arcade.
+  gameState.proBonus = mode === 'ARCADE' && consumeProTicket();
   gameState.status = 'RIVAL_INTRO';
   renderRivalIntro();
   showScreen(gameState.status);
@@ -297,6 +300,34 @@ async function startDailyChallengeFlow() {
 }
 
 document.getElementById('daily-button').addEventListener('click', startDailyChallengeFlow);
+
+// Modo Pro: valida nombre/apodo y lanza la mesa Spin&Go a 3 (motor en pro.js,
+// UI en pro-ui.js).
+function startProFlow() {
+  const name = document.getElementById('player-name').value.trim();
+  const alias = document.getElementById('player-alias').value.trim();
+  const errorEl = document.getElementById('register-error');
+  if (!name || !alias) {
+    errorEl.textContent = 'La mesa necesita tu nombre y tu apodo antes de empezar.';
+    return;
+  }
+  errorEl.textContent = '';
+  startProMode(name, alias);
+}
+
+document.getElementById('pro-button').addEventListener('click', startProFlow);
+
+// Consume el ticket x2 del Modo Pro (si existe) al arrancar una run de Arcade.
+// Devuelve true si estaba activo (y lo borra: es de un solo uso).
+function consumeProTicket() {
+  try {
+    if (localStorage.getItem('spinho_pro_x2') === '1') {
+      localStorage.removeItem('spinho_pro_x2');
+      return true;
+    }
+  } catch (e) { /* sin almacenamiento */ }
+  return false;
+}
 
 // --- Pantalla de registro: pestañas (INSCRIBIRSE / REGLAS / RECORDS) ---
 
@@ -682,6 +713,8 @@ function revealRewardBreakdown() {
   } else {
     banner.classList.add('hidden');
   }
+
+  document.getElementById('reward-pro-note').classList.toggle('hidden', !pendingReward.proDoubled);
 
   document.getElementById('reward-box').classList.remove('hidden');
   document.getElementById('next-table-button').classList.remove('hidden');
