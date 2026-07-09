@@ -436,6 +436,8 @@ function renderBattle() {
   renderHiddenCardRow('battle-rival-cards', 2);
   document.getElementById('battle-reveal-caption').textContent = '';
 
+  const playerAvatarEl = document.getElementById('battle-player-avatar');
+  if (playerAvatarEl) playerAvatarEl.textContent = (gameState.player.name || '?').charAt(0).toUpperCase();
   document.getElementById('battle-player-name').textContent = `${gameState.player.name} "${gameState.player.alias}"`;
   document.getElementById('battle-player-lives').innerHTML = renderLivesHearts(gameState.playerLives, playerMaxLives(gameState));
   renderCardRow('battle-player-cards', hand.playerCards, true);

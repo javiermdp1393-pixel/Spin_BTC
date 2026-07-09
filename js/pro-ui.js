@@ -5,7 +5,7 @@
 
 let proGame = null;
 let proPlayer = { name: '', alias: '' };
-const PRO_AI_DELAY = 850; // ms entre acciones de la IA (legibilidad)
+const PRO_AI_DELAY = 1000; // ms entre acciones de la IA (legibilidad)
 const FICHAS_PER_HEART = 20; // los corazones se muestran como fichas enteras
 
 let proRenderedBoard = 0;
@@ -66,18 +66,35 @@ async function startProMode(name, alias) {
   driveProUntilHuman();
 }
 
-// Avatares y nombres fijos de la mano (imágenes de los rivales si existen).
+// Avatares de la mesa. Usa la misma técnica que los retratos del resto del
+// juego (copia difuminada de fondo + foto completa en "contain" encima) para
+// que la cara nunca quede recortada, aunque la foto sea de cuerpo entero.
+function setProAvatarImage(el, imageUrl, name) {
+  el.textContent = '';
+  const blur = document.createElement('div');
+  blur.className = 'pro-avatar-blur';
+  blur.style.backgroundImage = `url('${imageUrl}')`;
+  const img = document.createElement('img');
+  img.className = 'pro-avatar-img';
+  img.src = imageUrl;
+  img.alt = name;
+  img.onerror = () => { el.innerHTML = ''; el.textContent = (name || '?').charAt(0).toUpperCase(); };
+  el.innerHTML = '';
+  el.appendChild(blur);
+  el.appendChild(img);
+}
+
 function proSetupSeats() {
   const avatars = {
     0: null,
-    1: "url('assets/rivals/el-pirulas.jpg')",
-    2: "url('assets/rivals/daily-champion.png?v=2')"
+    1: 'assets/rivals/el-pirulas.jpg',
+    2: 'assets/rivals/daily-champion.png?v=2'
   };
   [0, 1, 2].forEach((i) => {
     const av = document.getElementById('pro-avatar-' + i);
     if (!av) return;
-    if (avatars[i]) { av.style.backgroundImage = avatars[i]; av.textContent = ''; }
-    else { av.style.backgroundImage = ''; av.textContent = (proGame.seats[i].name || '?').charAt(0).toUpperCase(); }
+    if (avatars[i]) setProAvatarImage(av, avatars[i], proGame.seats[i].name);
+    else { av.innerHTML = ''; av.textContent = (proGame.seats[i].name || '?').charAt(0).toUpperCase(); }
   });
 }
 
