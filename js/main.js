@@ -732,7 +732,7 @@ async function renderFinal() {
       alias: gameState.player.alias,
       totalPrize: gameState.totalPrize
     });
-    const winners = await fetchDailyWinners(50);
+    const winners = await fetchDailyHallOfFame(20);
     renderDailyWinners(winners);
     setLeaderboardStatus('El Desafío diario no cuenta para el ranking mundial.');
     const topDaily = await fetchTopScores();
@@ -790,8 +790,8 @@ function renderDailyResult() {
   el.classList.add('daily-banner-win');
 }
 
-// Roster de jugadores que han batido el desafío de hoy (pantalla final del
-// modo diario). Deduplica por nombre+apodo quedándose con el mejor premio.
+// Salón de la fama del desafío diario en la pantalla final (histórico de todos
+// los que lo han batido). Deduplica por jugador quedándose con su mejor premio.
 function renderDailyWinners(winners) {
   const el = document.getElementById('daily-winners');
   if (!el) return;
@@ -801,7 +801,7 @@ function renderDailyWinners(winners) {
     return;
   }
   const list = dedupeDailyWinners(winners);
-  el.innerHTML = `<p class="zone-label">Han batido el desafío de hoy (${list.length})</p>` +
+  el.innerHTML = `<p class="zone-label">Salón de la fama · Desafío diario (${list.length})</p>` +
     `<ol class="records-list">${dailyWinnersRowsHtml(list)}</ol>`;
   el.classList.remove('hidden');
 }
