@@ -54,6 +54,14 @@ async function startProMode(name, alias) {
 
   proSetupSeats(champName);
   proRenderedBoard = 0; proYourCardsHand = -1; proLastPot = 0;
+  // Limpieza explícita del DOM de la mesa: si el jugador vuelve a entrar tras
+  // ser eliminado, sin esto quedaban pegadas las comunitarias (y las cartas
+  // reveladas de los rivales) de la partida anterior, mezclándose con las
+  // nuevas ("cartas raras").
+  document.getElementById('pro-board').innerHTML = '';
+  document.getElementById('pro-cards-1').innerHTML = '';
+  document.getElementById('pro-cards-2').innerHTML = '';
+  document.getElementById('pro-your-cards').innerHTML = '';
   document.getElementById('pro-result').classList.add('hidden');
   document.getElementById('pro-next-hand').classList.add('hidden');
   document.getElementById('pro-actions').classList.remove('hidden');
