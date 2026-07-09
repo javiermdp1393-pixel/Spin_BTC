@@ -268,37 +268,62 @@
 
 <!-- 8. MODO PRO (mesa Spin&Go a 3) -->
 <section id="pro-screen" class="screen">
-  <div class="pro-table">
-    <div class="pro-rivals">
-      <div class="pro-seat" id="pro-seat-1"></div>
-      <div class="pro-seat" id="pro-seat-2"></div>
+  <div class="pro-felt">
+    <!-- Rivales (arriba, uno a cada lado) -->
+    <div class="pro-seat pro-seat-rival pro-seat-left" id="pro-seat-1">
+      <div class="pro-avatar" id="pro-avatar-1"></div>
+      <div class="pro-seat-body">
+        <div class="pro-seat-name"><span id="pro-name-1"></span><span class="pro-seat-badge hidden" id="pro-badge-1"></span></div>
+        <div class="pro-seat-stack" id="pro-stack-1"></div>
+        <div class="pro-seat-state" id="pro-state-1"></div>
+      </div>
+      <div class="pro-seat-bet hidden" id="pro-bet-1"></div>
+      <div class="pro-seat-cards card-row" id="pro-cards-1"></div>
     </div>
 
-    <div class="pro-center">
-      <p id="pro-street" class="pro-street"></p>
-      <p id="pro-pot" class="pro-pot"></p>
-      <div id="pro-board" class="pro-board card-row"></div>
-      <p id="pro-msg" class="pro-msg"></p>
+    <div class="pro-seat pro-seat-rival pro-seat-right" id="pro-seat-2">
+      <div class="pro-avatar" id="pro-avatar-2"></div>
+      <div class="pro-seat-body">
+        <div class="pro-seat-name"><span id="pro-name-2"></span><span class="pro-seat-badge hidden" id="pro-badge-2"></span></div>
+        <div class="pro-seat-stack" id="pro-stack-2"></div>
+        <div class="pro-seat-state" id="pro-state-2"></div>
+      </div>
+      <div class="pro-seat-bet hidden" id="pro-bet-2"></div>
+      <div class="pro-seat-cards card-row" id="pro-cards-2"></div>
     </div>
 
-    <div class="pro-you">
-      <div class="pro-you-head">
-        <span id="pro-you-name" class="zone-name"></span>
-        <span id="pro-you-badge" class="pro-seat-badge"></span>
-        <span id="pro-you-hearts" class="pro-you-hearts"></span>
-        <span id="pro-you-bet" class="pro-you-bet"></span>
-      </div>
-      <div id="pro-your-cards" class="card-row"></div>
-      <p id="pro-odds" class="pro-odds"></p>
-      <div id="pro-actions" class="pro-actions">
-        <button class="btn btn-primary" data-pro="CHECK" type="button">CHECK</button>
-        <button class="btn btn-primary" data-pro="CALL" type="button">PAGAR</button>
-        <button class="btn btn-risk" data-pro="RAISE" type="button">DOBLAR</button>
-        <button class="btn btn-danger" data-pro="FOLD" type="button">FOLD</button>
-        <button class="btn btn-danger" data-pro="ALLIN" type="button">ALL-IN</button>
-      </div>
-      <button id="pro-next-hand" class="btn btn-primary hidden" type="button">Siguiente mano</button>
+    <!-- Centro: bote + comunitarias -->
+    <div class="pro-felt-center">
+      <div class="pro-pot" id="pro-pot"></div>
+      <div class="pro-board card-row" id="pro-board"></div>
     </div>
+
+    <!-- Tú (abajo, marcador en la mesa) -->
+    <div class="pro-seat pro-seat-you" id="pro-seat-0">
+      <div class="pro-avatar" id="pro-avatar-0"></div>
+      <div class="pro-seat-body">
+        <div class="pro-seat-name"><span id="pro-name-0"></span><span class="pro-seat-badge hidden" id="pro-badge-0"></span></div>
+        <div class="pro-seat-stack" id="pro-stack-0"></div>
+      </div>
+      <div class="pro-seat-bet hidden" id="pro-bet-0"></div>
+    </div>
+  </div>
+
+  <!-- HUD inferior: estado, tus cartas, odds y acciones -->
+  <div class="pro-hud">
+    <p class="pro-street" id="pro-street"></p>
+    <p class="pro-msg" id="pro-msg"></p>
+    <div class="pro-your-cards card-row" id="pro-your-cards"></div>
+    <button class="pro-odds hidden" id="pro-odds" type="button"></button>
+    <p class="pro-odds-detail hidden" id="pro-odds-detail"></p>
+    <div id="pro-actions" class="pro-actions">
+      <button class="btn btn-primary" data-pro="CHECK" type="button">PASAR</button>
+      <button class="btn btn-primary" data-pro="CALL" type="button">PAGAR</button>
+      <button class="btn btn-risk" data-pro="RAISE" type="button">SUBIR</button>
+      <button class="btn btn-danger" data-pro="FOLD" type="button">RETIRARSE</button>
+      <button class="btn btn-danger" data-pro="ALLIN" type="button">ALL-IN</button>
+    </div>
+    <button id="pro-next-hand" class="btn btn-primary hidden" type="button">Siguiente mano</button>
   </div>
 
   <div id="pro-result" class="pro-result hidden">
