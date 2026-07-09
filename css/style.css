@@ -1184,3 +1184,124 @@ h2 {
   font-size: 0.72rem;
   font-weight: normal;
 }
+
+/* --- Modo Pro (mesa Spin&Go a 3) --- */
+
+.btn-pro {
+  background: linear-gradient(180deg, #1f9e7a, #0f5f49);
+  color: #eafff7;
+  font-weight: bold;
+  box-shadow: 0 0 12px rgba(31, 158, 122, 0.35);
+}
+.btn-pro:disabled { background: #24352f; color: #86a89b; box-shadow: none; }
+
+.reward-pro-note {
+  margin: 4px 0 0;
+  color: #7fe0c0;
+  font-weight: bold;
+}
+
+#pro-screen { justify-content: flex-start; padding: 16px; }
+
+.pro-table {
+  width: 100%;
+  max-width: 620px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pro-rivals {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.pro-seat {
+  flex: 1 1 0;
+  min-width: 0;
+  background: #14131a;
+  border: 1px solid #2a2731;
+  border-radius: 10px;
+  padding: 10px;
+  text-align: center;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pro-seat.active {
+  border-color: #d4af37;
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.4);
+}
+
+.pro-seat.folded { opacity: 0.45; }
+.pro-seat.out { opacity: 0.3; filter: grayscale(1); }
+.pro-seat.allin { border-color: #e0533f; box-shadow: 0 0 12px rgba(224, 83, 63, 0.4); }
+
+.pro-seat-top { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.pro-seat-name {
+  font-weight: bold;
+  color: #f2e9d8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pro-seat-badge {
+  font-size: 0.62rem;
+  font-weight: bold;
+  color: #1a1206;
+  background: #d4af37;
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+.pro-seat-hearts { color: #ff6b81; font-weight: bold; margin-top: 4px; }
+.pro-seat-state { color: #b9b0c4; font-size: 0.78rem; min-height: 1.1em; margin-top: 2px; }
+.pro-seat-bet { color: #d4af37; font-size: 0.78rem; margin-top: 2px; }
+.pro-seat-cards { min-height: 0; margin-top: 6px; gap: 4px; }
+.pro-seat-cards .card { width: 40px; height: 58px; }
+
+.pro-center { text-align: center; }
+.pro-street { color: #8a8394; text-transform: uppercase; letter-spacing: 2px; font-size: 0.72rem; margin: 0; }
+.pro-pot { font-size: 1.3rem; font-weight: bold; color: #f4d976; margin: 4px 0 8px; }
+.pro-board { min-height: 60px; gap: 6px; }
+.pro-board .card { width: 48px; height: 70px; }
+.pro-msg { color: #e8dcc0; font-style: italic; min-height: 1.2em; margin: 8px 0 0; }
+
+.pro-you {
+  background: #14131a;
+  border: 1px solid #2a2731;
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+}
+.pro-you-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.pro-you-hearts { color: #ff6b81; font-weight: bold; }
+.pro-you-bet { color: #d4af37; font-size: 0.85rem; }
+.pro-odds { color: #7fd0c8; font-size: 0.85rem; min-height: 1.1em; margin: 6px 0; }
+
+.pro-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+.pro-actions .btn { margin: 2px; padding: 12px 18px; font-size: 0.95rem; }
+
+.pro-result {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(6, 5, 8, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.pro-result .panel { max-width: 440px; }
+#pro-result-title { color: #f4d976; }

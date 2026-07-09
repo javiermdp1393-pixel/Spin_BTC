@@ -45,6 +45,7 @@ function createInitialState() {
     player: { name: '', alias: '' },
     mode: 'ARCADE', // ARCADE | FREEZEOUT
     demoMode: false, // acceso demo/QA: cada mano elimina al rival
+    proBonus: false, // ticket x2 del Modo Pro activo para esta run de Arcade
     daily: false, // desafío diario: gauntlet de 3 rivales con 3 vidas
     dailyChallenge: null, // { name, alias, totalPrize, mode, date } del campeón del día
     rivalLineup: null, // lista de rivales de la run actual (RIVALS o lineup diario)
@@ -342,6 +343,12 @@ function applyDouble(state) {
 function applyRewardForCurrentRival(state) {
   const rival = getCurrentRival(state);
   const reward = rollReward(rival.basePrize);
+  // Ticket x2 del Modo Pro: dobla los premios NORMALES de toda la run, pero
+  // deja los jackpots/pelotazos como estaban (un x2000 sería una locura).
+  if (state.proBonus && reward.type === 'NORMAL') {
+    reward.amount *= 2;
+    reward.proDoubled = true;
+  }
   state.totalPrize += reward.amount;
   return reward;
 }

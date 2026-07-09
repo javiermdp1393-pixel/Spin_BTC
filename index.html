@@ -48,11 +48,13 @@
         <button id="register-button" class="btn btn-primary">Entrar al Torneo</button>
         <button id="freezeout-button" class="btn btn-danger">Freezeout Mode</button>
         <button id="daily-button" class="btn btn-daily">Desafío diario 👑</button>
+        <button id="pro-button" class="btn btn-pro">Modo Pro ♠</button>
       </div>
       <div class="mode-descriptions">
         <p><strong>Arcade Mode</strong><br />Las vidas se reinician al empezar cada rival.</p>
         <p><strong>Freezeout Mode</strong><br />Las vidas no se reinician. Sobrevive con el mismo stack hasta El Pirulas. Empiezas con 5 vidas, recuperas media vida por cada rival derrotado y tienes un fold gratis por rival.</p>
         <p><strong>Desafío diario</strong><br />Gauntlet de 3 rivales con 3 vidas no recuperables: 2 rivales al azar y el campeón del día (el nº1 del ranking Arcade). Derrótalo para llevarte la corona.</p>
+        <p><strong>Modo Pro</strong><br />Póker de verdad por calles en mesa Spin&amp;Go a 3 (tú, El Pirulas y el campeón del día). Apuestas, faroles y all-in. Gánalo y llévate un x2 para tu próximo Arcade.</p>
       </div>
       <p id="demo-note" class="demo-note hidden">🛠️ Modo demo/QA activo — cada mano elimina al rival.</p>
 
@@ -71,6 +73,7 @@
         <button class="rules-mode-btn active" data-rulesmode="arcade" type="button">Arcade</button>
         <button class="rules-mode-btn" data-rulesmode="freezeout" type="button">Freezeout</button>
         <button class="rules-mode-btn" data-rulesmode="daily" type="button">Desafío diario</button>
+        <button class="rules-mode-btn" data-rulesmode="pro" type="button">Pro</button>
       </div>
 
       <div class="rules-common">
@@ -113,7 +116,18 @@
         </ul>
       </div>
 
-      <p class="app-version">SPINHO BEAT THE CHAMPION · v1.0.1</p>
+      <div id="rules-pro" class="rules-body">
+        <h3>Modo Pro ♠</h3>
+        <ul>
+          <li>Mesa <strong>Spin&amp;Go a 3</strong>: tú (5 corazones) contra El Pirulas y el campeón del día (8 corazones cada uno).</li>
+          <li>Se juega por calles (preflop/flop/turn/river) con apuestas reales: <strong>CHECK · PAGAR · DOBLAR · FOLD · ALL-IN</strong>.</li>
+          <li>Los corazones son <strong>fichas</strong>: el ganador de la mano se lleva el bote. El <strong>último en pie</strong> gana.</li>
+          <li>Los rivales juegan su mano real (sin trucos), pero van más sobrados de fichas.</li>
+          <li>Ganar te da un <strong>x2</strong> al prize money de tu próxima run de Arcade (los jackpots no se doblan).</li>
+        </ul>
+      </div>
+
+      <p class="app-version">SPINHO BEAT THE CHAMPION · v1.1</p>
     </div>
   </div>
 
@@ -208,6 +222,7 @@
       <p>Multiplicador: <span id="reward-multiplier"></span></p>
       <p id="reward-jackpot-banner" class="jackpot-banner hidden">¡JACKPOT!</p>
       <p class="reward-amount">Ganancia de la ronda: <span id="reward-amount"></span></p>
+      <p id="reward-pro-note" class="reward-pro-note hidden">🎟️ Bonus Pro ×2 aplicado</p>
       <p class="total-prize">Premio acumulado: <span id="reward-total"></span></p>
     </div>
 
@@ -251,8 +266,54 @@
   </div>
 </section>
 
+<!-- 8. MODO PRO (mesa Spin&Go a 3) -->
+<section id="pro-screen" class="screen">
+  <div class="pro-table">
+    <div class="pro-rivals">
+      <div class="pro-seat" id="pro-seat-1"></div>
+      <div class="pro-seat" id="pro-seat-2"></div>
+    </div>
+
+    <div class="pro-center">
+      <p id="pro-street" class="pro-street"></p>
+      <p id="pro-pot" class="pro-pot"></p>
+      <div id="pro-board" class="pro-board card-row"></div>
+      <p id="pro-msg" class="pro-msg"></p>
+    </div>
+
+    <div class="pro-you">
+      <div class="pro-you-head">
+        <span id="pro-you-name" class="zone-name"></span>
+        <span id="pro-you-badge" class="pro-seat-badge"></span>
+        <span id="pro-you-hearts" class="pro-you-hearts"></span>
+        <span id="pro-you-bet" class="pro-you-bet"></span>
+      </div>
+      <div id="pro-your-cards" class="card-row"></div>
+      <p id="pro-odds" class="pro-odds"></p>
+      <div id="pro-actions" class="pro-actions">
+        <button class="btn btn-primary" data-pro="CHECK" type="button">CHECK</button>
+        <button class="btn btn-primary" data-pro="CALL" type="button">PAGAR</button>
+        <button class="btn btn-risk" data-pro="RAISE" type="button">DOBLAR</button>
+        <button class="btn btn-danger" data-pro="FOLD" type="button">FOLD</button>
+        <button class="btn btn-danger" data-pro="ALLIN" type="button">ALL-IN</button>
+      </div>
+      <button id="pro-next-hand" class="btn btn-primary hidden" type="button">Siguiente mano</button>
+    </div>
+  </div>
+
+  <div id="pro-result" class="pro-result hidden">
+    <div class="panel">
+      <h2 id="pro-result-title"></h2>
+      <p id="pro-result-msg" class="copy"></p>
+      <div id="pro-result-hof" class="records-daily"></div>
+      <button id="pro-result-back" class="btn btn-primary" type="button">Volver</button>
+    </div>
+  </div>
+</section>
+
 <script src="js/rivals.js"></script>
 <script src="js/poker.js"></script>
+<script src="js/pro.js"></script>
 <script src="js/odds.js"></script>
 <script src="js/rewards.js"></script>
 <script src="js/supabase-config.js"></script>
@@ -261,5 +322,6 @@
 <script src="js/sound.js"></script>
 <script src="js/state.js"></script>
 <script src="js/main.js"></script>
+<script src="js/pro-ui.js"></script>
 </body>
 </html>
