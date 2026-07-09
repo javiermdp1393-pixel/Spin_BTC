@@ -10,7 +10,9 @@
 
 // Fracciones de corazón usadas como fichas.
 const PRO = {
-  startHearts: 5,
+  startHearts: 5, // corazones del jugador
+  rivalStartHearts: 8, // los rivales (campeones) arrancan más profundos: sube la
+  // dificultad sin darles skill (juegan su mano real). Calibrado ~18-20% winrate.
   sb: 1 / 5, // ciega pequeña
   bb: 1 / 4, // ciega grande
   streetBet: { FLOP: 1 / 5, TURN: 1 / 4, RIVER: 1 / 4 }, // apuesta base al abrir
@@ -69,7 +71,7 @@ function createProGame(seats) {
   return {
     seats: seats.map((s) => ({
       id: s.id, name: s.name, alias: s.alias || '', isHuman: !!s.isHuman,
-      hearts: PRO.startHearts, hole: [], inHand: false, allIn: false,
+      hearts: s.isHuman ? PRO.startHearts : PRO.rivalStartHearts, hole: [], inHand: false, allIn: false,
       committed: 0, streetBet: 0, out: false, lastAction: ''
     })),
     buttonIndex: 0,
