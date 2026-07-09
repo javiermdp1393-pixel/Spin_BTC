@@ -142,7 +142,9 @@ function buildDailyChampionRival(challenge) {
     alias,
     suit: 'champion',
     suitSymbol: '👑',
-    image: 'assets/rivals/daily-champion.png',
+    // ?v=N fuerza a navegador/CDN a re-descargar la imagen cuando se sustituye
+    // el modelo (mismo nombre de fichero): súbelo el número al cambiar el arte.
+    image: 'assets/rivals/daily-champion.png?v=2',
     introLine: 'Hoy el trono es mío. Veamos si aguantas hasta el final.',
     defeatLine: 'Me has arrebatado la corona del día... disfrútala, dura 24 horas.',
     nearDefeatLines: ['¿En serio vas a quitarme el trono?', 'No cantes victoria todavía.', 'Una mano más y esto se acaba.'],
