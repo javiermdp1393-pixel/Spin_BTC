@@ -284,12 +284,26 @@ h2 {
 
 /* --- Battle screen --- */
 
+/* Tapete simplificado (mismo lenguaje visual que la mesa del Modo Pro, con
+   corazones en vez de fichas): fondo verde sutil + asientos como tarjetas. */
 .battle-layout {
   width: 100%;
   max-width: 640px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
+  background: radial-gradient(ellipse at 50% 30%, #1a5c3b 0%, #123f29 55%, #0b2a1c 100%);
+  border: 8px solid #4a3320;
+  border-radius: 22px;
+  padding: 16px 14px;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.45), 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+
+.pro-like-seat {
+  background: rgba(10, 12, 16, 0.82);
+  border: 1px solid #2a2731;
+  border-radius: 12px;
+  padding: 12px;
 }
 
 .rival-zone, .player-zone {
@@ -301,6 +315,13 @@ h2 {
 
 .zone-info {
   text-align: center;
+}
+
+.zone-info-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
 }
 
 .zone-name {
@@ -1250,14 +1271,36 @@ h2 {
 
 @keyframes proPulse { 0%,100% { box-shadow: 0 0 0 2px rgba(212,175,55,0.5), 0 0 10px rgba(212,175,55,0.35); } 50% { box-shadow: 0 0 0 2px rgba(212,175,55,0.7), 0 0 20px rgba(212,175,55,0.6); } }
 
+/* Avatar circular compuesto igual que los retratos del resto del juego: una
+   copia difuminada de la propia foto rellena el círculo (sin dejar huecos) y
+   la foto completa se ve encima sin recortar (object-fit: contain), así la
+   cara nunca queda cortada por muy vertical/de cuerpo entero que sea la foto. */
 .pro-avatar {
+  position: relative;
+  overflow: hidden;
   flex: none;
   width: 42px; height: 42px;
   border-radius: 50%;
-  background: #2a2731 center/cover no-repeat;
+  background: #2a2731;
   border: 2px solid #d4af37;
   display: flex; align-items: center; justify-content: center;
   font-weight: bold; color: #f4d976; font-size: 1.1rem;
+}
+.pro-avatar-sm { width: 34px; height: 34px; font-size: 0.92rem; }
+.pro-avatar-blur {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(6px) brightness(0.55);
+  transform: scale(1.35);
+}
+.pro-avatar-img {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 .pro-seat.has-dealer .pro-avatar { border-color: #fff; }
 
