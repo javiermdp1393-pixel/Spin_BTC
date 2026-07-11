@@ -373,11 +373,13 @@ function advanceToNextRival(state) {
 // Reinicia el torneo tras un BUST_OUT, conservando nombre/apodo, modo y demo.
 // En el Desafío diario se rearma una run nueva (nuevos rivales aleatorios).
 function restartTournament(state) {
-  const { player, mode, demoMode, daily, dailyChallenge, bonusMultiplier } = state;
+  const { player, mode, demoMode, daily, dailyChallenge } = state;
   Object.assign(state, createInitialState());
   state.player = player;
   state.demoMode = demoMode;
-  state.bonusMultiplier = bonusMultiplier; // el ticket ya se consumió al empezar: no se pierde al reintentar
+  // El ticket de bonus es de un solo uso para la run que empezaste: si has
+  // busteado (llegas aquí desde el bust out), lo pierdes — el reintento NO
+  // conserva el bonus.
   if (daily) {
     startDailyChallenge(state, dailyChallenge);
   } else {

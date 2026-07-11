@@ -171,6 +171,15 @@ const Sound = (function () {
     [659.25, 830.61, 987.77].forEach((f, i) => tone(f, t + i * 0.09, 0.35, { type: 'triangle', gain: 0.15 }));
   }
 
+  // Aviso corto de "te toca" (Modo Pro): dos notas suaves ascendentes.
+  function playTurn() {
+    init();
+    if (!ctx) return;
+    const t = now();
+    tone(880, t, 0.12, { type: 'sine', gain: 0.16 });
+    tone(1318.5, t + 0.1, 0.16, { type: 'sine', gain: 0.14 });
+  }
+
   // --- Música de fondo: archivos reales, uno por contexto ---
 
   function ensureMusicEl(name) {
@@ -251,7 +260,7 @@ const Sound = (function () {
     init,
     playMusic,
     playDeal, playRouletteTick, playRouletteStop,
-    playWin, playLose, playFold, playDouble, playJackpot, playReward,
+    playWin, playLose, playFold, playDouble, playJackpot, playReward, playTurn,
     setMuted, isMuted
   };
 })();

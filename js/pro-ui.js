@@ -11,6 +11,8 @@ const FICHAS_PER_HEART = 20; // los corazones se muestran como fichas enteras
 let proRenderedBoard = 0;
 let proYourCardsHand = -1;
 let proLastPot = 0;
+let proAllInArmed = false; // confirmación de ALL-IN: primer toque arma, 2º confirma
+let proHistory = []; // resumen de cada mano jugada (para el historial)
 
 // Corazones -> fichas (número entero, más legible que 0.25 / 0.75).
 function fichas(h) { return Math.round(h * FICHAS_PER_HEART); }
@@ -54,6 +56,11 @@ async function startProMode(name, alias) {
 
   proSetupSeats(champName);
   proRenderedBoard = 0; proYourCardsHand = -1; proLastPot = 0;
+  proAllInArmed = false;
+  proHistory = [];
+  renderProHistory();
+  document.getElementById('pro-history-toggle').classList.add('hidden');
+  document.getElementById('pro-history-list').classList.add('hidden');
   // Limpieza explícita del DOM de la mesa: si el jugador vuelve a entrar tras
   // ser eliminado, sin esto quedaban pegadas las comunitarias (y las cartas
   // reveladas de los rivales) de la partida anterior, mezclándose con las
@@ -219,6 +226,12 @@ function showProHumanTurn() {
   const g = proGame;
   const you = g.seats[0];
   const legal = legalProActions(g);
+
+  // Aviso de "te toca": sonido + vibración (móvil). Se resetea la confirmación
+  // de ALL-IN al empezar un turno nuevo.
+  proAllInArmed = false;
+  Sound.playTurn();
+  if (navigator.vibrate) navigator.vibrate(120);
   const nOpp = seatsInHand(g).filter((s) => s !== you).length;
   const eq = multiwayEquity(you.hole, g.board, nOpp, 220);
   const pct = Math.round(eq * 100);
@@ -244,6 +257,7 @@ function showProHumanTurn() {
   };
   document.querySelectorAll('#pro-actions button[data-pro]').forEach((btn) => {
     const a = legal.find((x) => x.type === btn.dataset.pro);
+    btn.classList.remove('pro-allin-armed');
     if (!a) { btn.classList.add('hidden'); btn.disabled = true; return; }
     btn.classList.remove('hidden');
     btn.disabled = false;
@@ -276,12 +290,35 @@ function showProHandOver() {
 
   const winnerNames = lh.winners.map((id) => g.seats.find((s) => s.id === id).name).join(' y ');
   let msg = `🏆 ${winnerNames} se lleva el bote`;
+  let handTxt = '';
   if (lh && lh.showdown) {
     const w = lh.showdown.find((sd) => lh.winners.includes(sd.id));
-    if (w) msg = `🏆 ${winnerNames} gana con ${w.hand}`;
+    if (w) { msg = `🏆 ${winnerNames} gana con ${w.hand}`; handTxt = w.hand; }
   }
   document.getElementById('pro-msg').textContent = msg;
   document.getElementById('pro-next-hand').classList.remove('hidden');
+
+  // Registra la mano en el historial.
+  proHistory.push({ hand: g.handNumber, winner: winnerNames, handName: handTxt });
+  renderProHistory();
+}
+
+// Pinta el historial de manos (más reciente arriba) y muestra su botón.
+function renderProHistory() {
+  const listEl = document.getElementById('pro-history-list');
+  const toggleEl = document.getElementById('pro-history-toggle');
+  if (!listEl || !toggleEl) return;
+  if (!proHistory.length) {
+    listEl.innerHTML = '';
+    toggleEl.classList.add('hidden');
+    return;
+  }
+  toggleEl.classList.remove('hidden');
+  listEl.innerHTML = proHistory.slice().reverse().map((h) => {
+    const combo = h.handName ? ` con ${escapeHtml(h.handName)}` : '';
+    return `<li><span class="pro-hist-hand">Mano ${h.hand}</span>` +
+      `<span class="pro-hist-win">🏆 ${escapeHtml(h.winner)}${combo}</span></li>`;
+  }).join('');
 }
 
 function proHofHtml(hof) {
@@ -303,7 +340,11 @@ async function showProGameOver() {
   document.getElementById('pro-odds').classList.add('hidden');
   document.getElementById('pro-odds-detail').classList.add('hidden');
 
+  document.getElementById('pro-history-toggle').classList.add('hidden');
+  document.getElementById('pro-history-list').classList.add('hidden');
+
   const win = g.result === 'WIN';
+  recordGameResult('pro', win, 0);
   document.getElementById('pro-result-title').textContent = win ? '¡HAS GANADO EL PRO!' : 'FUERA DEL PRO';
   const msgEl = document.getElementById('pro-result-msg');
   const hofEl = document.getElementById('pro-result-hof');
@@ -330,6 +371,17 @@ document.getElementById('pro-actions').addEventListener('click', (e) => {
   const legal = legalProActions(proGame);
   const action = legal.find((a) => a.type === btn.dataset.pro);
   if (!action) return;
+
+  // Confirmación de ALL-IN: el primer toque arma el botón (no empuja las
+  // fichas todavía) y el segundo confirma. Evita all-ins accidentales.
+  if (action.type === 'ALLIN' && !proAllInArmed) {
+    proAllInArmed = true;
+    btn.classList.add('pro-allin-armed');
+    btn.textContent = '¿SEGURO? TOCA OTRA VEZ';
+    return;
+  }
+  proAllInArmed = false;
+
   setProActionsEnabled(false);
   document.getElementById('pro-odds').classList.add('hidden');
   document.getElementById('pro-odds-detail').classList.add('hidden');
@@ -338,12 +390,20 @@ document.getElementById('pro-actions').addEventListener('click', (e) => {
   driveProUntilHuman();
 });
 
+document.getElementById('pro-history-toggle').addEventListener('click', () => {
+  const list = document.getElementById('pro-history-list');
+  const toggle = document.getElementById('pro-history-toggle');
+  const open = list.classList.toggle('hidden');
+  toggle.textContent = open ? 'Historial de manos ▾' : 'Historial de manos ▴';
+});
+
 document.getElementById('pro-odds').addEventListener('click', () => {
   document.getElementById('pro-odds-detail').classList.toggle('hidden');
 });
 
 document.getElementById('pro-next-hand').addEventListener('click', () => {
   if (!proGame) return;
+  proAllInArmed = false;
   document.getElementById('pro-next-hand').classList.add('hidden');
   document.getElementById('pro-actions').classList.remove('hidden');
   startProHand(proGame);

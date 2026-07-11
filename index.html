@@ -36,6 +36,7 @@
   <!-- 2a. Vista INSCRIBIRSE -->
   <div id="regview-inscribirse" class="regview active">
     <div class="panel">
+      <button id="resume-button" class="btn btn-primary resume-button hidden" type="button"></button>
       <h2>Toma asiento en la primera mesa</h2>
       <p class="copy">Escribe tu nombre, elige tu apodo y toma asiento. La primera mano empieza ahora.</p>
       <label for="player-name">Player name</label>
@@ -56,6 +57,7 @@
         <p><strong>Desafío diario</strong> · 3 rivales, 3 vidas, corona diaria en juego.</p>
         <p><strong>Modo Pro</strong> · Póker real por calles en mesa a 3.</p>
       </div>
+      <p id="daily-countdown" class="daily-countdown"></p>
       <p id="demo-note" class="demo-note hidden">🛠️ Modo demo/QA activo — cada mano elimina al rival.</p>
 
       <div class="records-block">
@@ -128,7 +130,7 @@
         </ul>
       </div>
 
-      <p class="app-version">SPINHO BEAT THE CHAMPION · v1.1.1</p>
+      <p class="app-version">SPINHO BEAT THE CHAMPION · v1.1.2</p>
     </div>
   </div>
 
@@ -138,6 +140,7 @@
       <h2>Récords</h2>
       <p class="copy">Las mejores puntuaciones del ranking mundial, compartidas entre todos los jugadores.</p>
       <div id="records-tab" class="records-widget"></div>
+      <div id="stats-block" class="records-block"></div>
     </div>
   </div>
 </section>
@@ -328,6 +331,8 @@
       <button class="btn btn-allin" data-pro="ALLIN" type="button">ALL-IN</button>
     </div>
     <button id="pro-next-hand" class="btn btn-primary hidden" type="button">Siguiente mano</button>
+    <button id="pro-history-toggle" class="pro-history-toggle hidden" type="button">Historial de manos ▾</button>
+    <ol id="pro-history-list" class="pro-history-list hidden"></ol>
   </div>
 
   <div id="pro-result" class="pro-result hidden">
@@ -345,6 +350,7 @@
 <script src="js/pro.js"></script>
 <script src="js/odds.js"></script>
 <script src="js/rewards.js"></script>
+<script src="js/profile.js"></script>
 <script src="js/supabase-config.js"></script>
 <script src="js/leaderboard.js"></script>
 <script src="js/records.js"></script>
