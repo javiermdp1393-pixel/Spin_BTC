@@ -76,12 +76,17 @@ resto + board):
 
 ## 6. Recompensa / satélite (sin sistema de usuarios)
 
-- **Bonus x2 al siguiente Arcade**: al ganar el Pro se guarda un "ticket x2" en
-  `localStorage`. **No caduca**. En la próxima run de Arcade **duplica el prize
-  money de toda la run** y se consume al terminarla.
+- **Bonus x3 al siguiente Arcade**: al ganar el Pro se guarda un ticket de
+  bonus (×3, el más alto del juego) en `localStorage`, en el mismo slot
+  compartido que usa el Desafío diario (×2) — ver `js/main.js`
+  `setBonusTicket()`/`consumeBonusTicket()`. Si ya había un ticket mejor
+  guardado, ganar uno peor no lo downgradea (se queda el máximo). **No
+  caduca**. En la próxima run de Arcade **multiplica el prize money de toda
+  la run** y se consume al terminarla.
   - **Excepción**: los **jackpots/pelotazos** de la ruleta (JACKPOT ×1000,
-    MEGA ×200/×100/×50) **se mantienen tal cual** (no se les aplica el x2); un
-    ×2000 sería una locura. El x2 solo dobla los premios **normales** (×2–×10).
+    MEGA ×200/×100/×50) **se mantienen tal cual** (no se les aplica el
+    bonus); un ×3000 sería una locura. El bonus solo multiplica los premios
+    **normales** (×2–×10).
   - *Limitación honesta*: es por-dispositivo y borrable (localStorage).
 - **Salón de la fama del Pro**: tabla `pro_results` en Supabase (misma idea que
   `daily_results`), histórico global de quién se ha pasado el modo Pro.
