@@ -248,8 +248,9 @@ function startTournamentFlow(mode) {
   gameState.player.name = name;
   gameState.player.alias = alias;
   startTournament(gameState, mode);
-  // Bonus x2 del Modo Pro: solo aplica (y se consume) en una run de Arcade.
-  gameState.proBonus = mode === 'ARCADE' && consumeProTicket();
+  // Ticket de bonus (x2 Desafío diario / x3 Modo Pro): solo aplica (y se
+  // consume) al arrancar una run de Arcade.
+  gameState.bonusMultiplier = mode === 'ARCADE' ? consumeBonusTicket() : 1;
   gameState.status = 'RIVAL_INTRO';
   renderRivalIntro();
   showScreen(gameState.status);
@@ -312,16 +313,29 @@ function startProFlow() {
 
 document.getElementById('pro-button').addEventListener('click', startProFlow);
 
-// Consume el ticket x2 del Modo Pro (si existe) al arrancar una run de Arcade.
-// Devuelve true si estaba activo (y lo borra: es de un solo uso).
-function consumeProTicket() {
+// Ticket de bonus para la próxima run de Arcade: lo gana el Desafío diario
+// (x2) y el Modo Pro (x3). Un solo slot en localStorage: si ya había un
+// ticket mejor guardado, no se downgradea al ganar uno menor.
+const BONUS_TICKET_KEY = 'spinho_arcade_bonus_x';
+
+function setBonusTicket(multiplier) {
   try {
-    if (localStorage.getItem('spinho_pro_x2') === '1') {
-      localStorage.removeItem('spinho_pro_x2');
-      return true;
+    const current = parseInt(localStorage.getItem(BONUS_TICKET_KEY) || '0', 10);
+    localStorage.setItem(BONUS_TICKET_KEY, String(Math.max(current, multiplier)));
+  } catch (e) { /* sin almacenamiento */ }
+}
+
+// Consume el ticket de bonus (si existe) al arrancar una run de Arcade.
+// Devuelve el multiplicador (2, 3...) o 1 si no había ticket. Es de un solo uso.
+function consumeBonusTicket() {
+  try {
+    const v = parseInt(localStorage.getItem(BONUS_TICKET_KEY) || '0', 10);
+    if (v > 1) {
+      localStorage.removeItem(BONUS_TICKET_KEY);
+      return v;
     }
   } catch (e) { /* sin almacenamiento */ }
-  return false;
+  return 1;
 }
 
 // --- Pantalla de registro: pestañas (INSCRIBIRSE / REGLAS / RECORDS) ---
@@ -711,7 +725,13 @@ function revealRewardBreakdown() {
     banner.classList.add('hidden');
   }
 
-  document.getElementById('reward-pro-note').classList.toggle('hidden', !pendingReward.proDoubled);
+  const proNoteEl = document.getElementById('reward-pro-note');
+  if (pendingReward.bonusMultiplier > 1) {
+    proNoteEl.textContent = `🎟️ Bonus ×${pendingReward.bonusMultiplier} aplicado`;
+    proNoteEl.classList.remove('hidden');
+  } else {
+    proNoteEl.classList.add('hidden');
+  }
 
   document.getElementById('reward-box').classList.remove('hidden');
   document.getElementById('next-table-button').classList.remove('hidden');
@@ -757,6 +777,7 @@ async function renderFinal() {
   // lugar registra que has batido el reto y muestra el roster de ganadores de
   // hoy, además del top Arcade como referencia.
   if (gameState.daily) {
+    setBonusTicket(2);
     await submitDailyWin({
       name: gameState.player.name,
       alias: gameState.player.alias,
@@ -814,8 +835,8 @@ function renderDailyResult() {
   const name = c.name || 'el campeón';
   const ownRecord = c.name === gameState.player.name && c.alias === gameState.player.alias;
   el.textContent = ownRecord
-    ? '👑 Has defendido tu propio trono del día. Sigues siendo el campeón.'
-    : `👑 ¡Has destronado a ${name}${aliasTxt}! La corona del desafío de hoy es tuya.`;
+    ? '👑 Has defendido tu propio trono del día. Sigues siendo el campeón. 🎟️ Ganas un x2 para tu próxima run de Arcade.'
+    : `👑 ¡Has destronado a ${name}${aliasTxt}! La corona del desafío de hoy es tuya. 🎟️ Ganas un x2 para tu próxima run de Arcade.`;
   el.classList.remove('hidden', 'daily-banner-fail');
   el.classList.add('daily-banner-win');
 }

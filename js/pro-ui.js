@@ -309,8 +309,8 @@ async function showProGameOver() {
   const hofEl = document.getElementById('pro-result-hof');
 
   if (win) {
-    try { localStorage.setItem('spinho_pro_x2', '1'); } catch (e) { /* sin almacenamiento */ }
-    msgEl.textContent = `Último en pie en ${g.handNumber} manos. 🎟️ Ganas un x2 para tu próxima run de Arcade (los jackpots no se doblan).`;
+    setBonusTicket(3);
+    msgEl.textContent = `Último en pie en ${g.handNumber} manos. 🎟️ Ganas un x3 para tu próxima run de Arcade (los jackpots no se doblan).`;
     Sound.playMusic('champion');
     await submitProWin({ name: proPlayer.name, alias: proPlayer.alias, hands: g.handNumber });
     hofEl.innerHTML = proHofHtml(await fetchProHallOfFame(20));

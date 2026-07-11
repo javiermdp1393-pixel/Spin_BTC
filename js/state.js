@@ -23,10 +23,11 @@ const FREEZEOUT = {
 // Ajustes del Desafío diario: gauntlet de 3 rivales con un único stack de 3
 // vidas no recuperables. Los 2 primeros rivales son aleatorios (dificultad
 // Arcade); el 3º es el campeón del día (el nº1 del ranking Arcade). Sin bonus
-// de racha y con 3 folds gratis para TODA la run.
+// de racha y con 1 fold gratis para TODA la run (antes 3: se lo pasaba casi
+// cualquiera, así que se endurece sin tocar el resto de la dificultad).
 const DAILY = {
   startLives: 3, // 3 vidas para toda la run, no recuperables
-  freeFolds: 3, // folds gratis para toda la run (no por rival)
+  freeFolds: 1, // folds gratis para toda la run (no por rival)
   // El campeón es el combate decisivo con el stack no recuperable: su nº de
   // vidas es la palanca real del winrate. Calibrado por simulación a 5 (+escudo)
   // para dejar la victoria óptima en ~12% (similar al Arcade, bajo el tope 15%).
@@ -45,7 +46,7 @@ function createInitialState() {
     player: { name: '', alias: '' },
     mode: 'ARCADE', // ARCADE | FREEZEOUT
     demoMode: false, // acceso demo/QA: cada mano elimina al rival
-    proBonus: false, // ticket x2 del Modo Pro activo para esta run de Arcade
+    bonusMultiplier: 1, // ticket de bonus activo (x2 Desafío diario / x3 Modo Pro) para esta run de Arcade
     daily: false, // desafío diario: gauntlet de 3 rivales con 3 vidas
     dailyChallenge: null, // { name, alias, totalPrize, mode, date } del campeón del día
     rivalLineup: null, // lista de rivales de la run actual (RIVALS o lineup diario)
@@ -168,7 +169,7 @@ function buildDailyLineup(challenge) {
 }
 
 // Arranca el desafío diario: gauntlet de 3 rivales con un único stack de 3
-// vidas no recuperables y 3 folds gratis para toda la run. `challenge` =
+// vidas no recuperables y 1 fold gratis para toda la run. `challenge` =
 // { name, alias, totalPrize, mode, date } del campeón del día.
 function startDailyChallenge(state, challenge) {
   state.mode = 'ARCADE'; // reglas base (odds/premios) tipo Arcade
@@ -343,11 +344,12 @@ function applyDouble(state) {
 function applyRewardForCurrentRival(state) {
   const rival = getCurrentRival(state);
   const reward = rollReward(rival.basePrize);
-  // Ticket x2 del Modo Pro: dobla los premios NORMALES de toda la run, pero
-  // deja los jackpots/pelotazos como estaban (un x2000 sería una locura).
-  if (state.proBonus && reward.type === 'NORMAL') {
-    reward.amount *= 2;
-    reward.proDoubled = true;
+  // Ticket de bonus (x2 Desafío diario / x3 Modo Pro): multiplica los premios
+  // NORMALES de toda la run, pero deja los jackpots/pelotazos como estaban
+  // (un x3000 sería una locura).
+  if (state.bonusMultiplier > 1 && reward.type === 'NORMAL') {
+    reward.amount *= state.bonusMultiplier;
+    reward.bonusMultiplier = state.bonusMultiplier;
   }
   state.totalPrize += reward.amount;
   return reward;
@@ -371,10 +373,11 @@ function advanceToNextRival(state) {
 // Reinicia el torneo tras un BUST_OUT, conservando nombre/apodo, modo y demo.
 // En el Desafío diario se rearma una run nueva (nuevos rivales aleatorios).
 function restartTournament(state) {
-  const { player, mode, demoMode, daily, dailyChallenge } = state;
+  const { player, mode, demoMode, daily, dailyChallenge, bonusMultiplier } = state;
   Object.assign(state, createInitialState());
   state.player = player;
   state.demoMode = demoMode;
+  state.bonusMultiplier = bonusMultiplier; // el ticket ya se consumió al empezar: no se pierde al reintentar
   if (daily) {
     startDailyChallenge(state, dailyChallenge);
   } else {
