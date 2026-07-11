@@ -101,6 +101,10 @@ resto + board):
   botones **CHECK / PAGAR / DOBLAR / FOLD / ALL-IN**.
 - **Pacing**: las jugadas de la IA se muestran **una a una** con delay y
   etiqueta en su asiento, para seguir la acción multivía.
+- **Aviso de turno**: al tocarte a ti suena un aviso corto y vibra el móvil.
+- **Confirmación de ALL-IN**: el primer toque arma el botón (parpadea) y el
+  segundo confirma, para no empujar todas las fichas por un toque accidental.
+- **Historial de manos**: desplegable con el ganador y la jugada de cada mano.
 - **Transferencia de corazones** animada del perdedor al ganador al cerrar mano.
 - **Eliminación**: rival a 0 = `FUERA`; la mesa colapsa a 1v1.
 

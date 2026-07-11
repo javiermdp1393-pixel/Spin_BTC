@@ -1173,6 +1173,36 @@ h2 {
   color: #6f6878;
 }
 
+/* --- Reanudar partida guardada (lobby) --- */
+
+.resume-button {
+  width: 100%;
+  margin: 0 0 14px;
+  background: linear-gradient(180deg, #f4d976, #c9a53a);
+  color: #2a2208;
+  font-weight: bold;
+  box-shadow: 0 0 14px rgba(244, 217, 118, 0.35);
+}
+.resume-button:hover { filter: brightness(1.05); }
+
+/* --- Cuenta atrás del desafío diario --- */
+
+.daily-countdown {
+  margin: 10px 0 0;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #f4d976;
+  min-height: 1.1em;
+}
+
+/* --- Estadísticas del jugador (pestaña RECORDS) --- */
+
+.stats-list li .records-amount {
+  font-variant-numeric: tabular-nums;
+  color: #9fe6dd;
+}
+
 /* --- Desafío diario: ganadores del día --- */
 
 .daily-winners-count {
@@ -1387,6 +1417,49 @@ h2 {
   margin: 6px 0;
 }
 .pro-odds-detail { color: #cfc7d6; font-size: 0.85rem; background: #0e0d12; border: 1px solid #2a2731; border-radius: 8px; padding: 8px 12px; margin: 0 auto 8px; max-width: 460px; }
+
+/* ALL-IN armado (esperando confirmación del 2º toque): parpadeo para que se
+   note que aún no se ha empujado y hay que volver a tocar. */
+.btn-allin.pro-allin-armed {
+  animation: allin-pulse 0.7s ease-in-out infinite;
+  box-shadow: 0 0 16px rgba(255, 61, 129, 0.75);
+}
+@keyframes allin-pulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.35); }
+}
+
+/* Historial de manos del Pro (desplegable). */
+.pro-history-toggle {
+  background: none;
+  border: none;
+  color: #9a93a4;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  margin: 10px auto 0;
+  display: block;
+}
+.pro-history-list {
+  list-style: none;
+  margin: 8px auto 0;
+  padding: 0;
+  max-width: 460px;
+  max-height: 180px;
+  overflow-y: auto;
+  text-align: left;
+}
+.pro-history-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 10px;
+  border-bottom: 1px solid #241f2b;
+  font-size: 0.82rem;
+}
+.pro-history-list li:last-child { border-bottom: none; }
+.pro-hist-hand { color: #8a8394; white-space: nowrap; }
+.pro-hist-win { color: #d8d2e0; text-align: right; }
 
 /* Grid fijo de 2 columnas (hasta 4 acciones a la vez: check/pagar + subir +
    retirarse + all-in) en vez de flex-wrap, para un alto predecible de 2

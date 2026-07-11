@@ -230,6 +230,8 @@ document.getElementById('start-button').addEventListener('click', () => {
   gameState.status = 'REGISTER';
   showRegisterView('inscribirse');
   renderRecordsWidget(document.getElementById('records-register'), 'ARCADE');
+  refreshResumeButton();
+  refreshDailyCountdown();
   showScreen(gameState.status);
 });
 
@@ -338,6 +340,74 @@ function consumeBonusTicket() {
   return 1;
 }
 
+// --- Reanudar partida guardada (Arcade / Freezeout) ------------------------
+
+// Muestra u oculta el botón "Continuar" del lobby según haya una partida
+// guardada (solo Arcade/Freezeout en curso; el diario y el Pro no se guardan).
+function refreshResumeButton() {
+  const btn = document.getElementById('resume-button');
+  if (!btn) return;
+  const snap = loadRunSnapshot();
+  if (snap) {
+    btn.textContent = `▶ Continuar — ${savedRunLabel(snap)}`;
+    btn.classList.remove('hidden');
+  } else {
+    btn.classList.add('hidden');
+  }
+}
+
+// Restaura gameState desde la foto guardada y salta a la pantalla adecuada.
+function resumeSavedRun() {
+  const snap = loadRunSnapshot();
+  if (!snap) return;
+  Object.assign(gameState, createInitialState());
+  gameState.player = snap.player || { name: '', alias: '' };
+  gameState.mode = snap.mode;
+  gameState.rivalLineup = RIVALS; // en Arcade/Freezeout siempre es el lineup fijo
+  gameState.currentRivalIndex = snap.currentRivalIndex;
+  gameState.playerLives = snap.playerLives;
+  gameState.rivalLives = snap.rivalLives;
+  gameState.totalPrize = snap.totalPrize;
+  gameState.winStreak = snap.winStreak || 0;
+  gameState.resistRemaining = snap.resistRemaining || 0;
+  gameState.freeFoldsRemaining = snap.freeFoldsRemaining || 0;
+  gameState.rivalLine = snap.rivalLine || { victoryShown: false, defeatShown: false, text: '' };
+  gameState.currentHand = snap.currentHand;
+  gameState.bonusMultiplier = snap.bonusMultiplier || 1;
+  gameState.status = snap.status;
+
+  if (snap.status === 'BATTLE' && gameState.currentHand) {
+    renderBattle();
+    showScreen('BATTLE');
+  } else {
+    gameState.status = 'RIVAL_INTRO';
+    renderRivalIntro();
+    showScreen('RIVAL_INTRO');
+  }
+}
+
+document.getElementById('resume-button').addEventListener('click', resumeSavedRun);
+
+// --- Cuenta atrás para el próximo Desafío diario ---------------------------
+// El cron de Supabase refresca el reto a las 03:00 UTC. Mostramos el tiempo
+// restante para que el jugador sepa cuándo cambia el rival del día.
+
+function timeToNextDailyText() {
+  const now = new Date();
+  const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 3, 0, 0, 0));
+  if (now.getTime() >= next.getTime()) next.setUTCDate(next.getUTCDate() + 1);
+  const ms = next.getTime() - now.getTime();
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  return `${h}h ${m}min`;
+}
+
+function refreshDailyCountdown() {
+  const el = document.getElementById('daily-countdown');
+  if (el) el.textContent = `⏳ Nuevo desafío diario en ${timeToNextDailyText()}`;
+}
+setInterval(refreshDailyCountdown, 60000);
+
 // --- Pantalla de registro: pestañas (INSCRIBIRSE / REGLAS / RECORDS) ---
 
 function showRegisterView(view) {
@@ -348,7 +418,10 @@ function showRegisterView(view) {
     v.classList.toggle('active', v.id === `regview-${view}`);
   });
   // La tabla de récords se (re)carga al abrir su pestaña, para traer lo último.
-  if (view === 'records') renderRecordsWidget(document.getElementById('records-tab'), 'ARCADE');
+  if (view === 'records') {
+    renderRecordsWidget(document.getElementById('records-tab'), 'ARCADE');
+    document.getElementById('stats-block').innerHTML = statsHtml();
+  }
 }
 
 document.querySelectorAll('#register-screen .reg-tab').forEach((tab) => {
@@ -380,6 +453,7 @@ function renderRivalIntro() {
     dailyEl.textContent = rival.dailyChampion
       ? `👑 Rival ${idx}/${total} — El campeón del día. ¡Destrónalo para llevarte la corona!`
       : `👑 Desafío diario · Rival ${idx}/${total} · 3 vidas no recuperables · ${folds} fold${folds === 1 ? '' : 's'} gratis`;
+    dailyEl.textContent += ` · ⏳ El reto cambia en ${timeToNextDailyText()}`;
     dailyEl.classList.remove('hidden');
   } else {
     dailyEl.textContent = '';
@@ -422,6 +496,9 @@ function renderRivalIntro() {
   document.getElementById('rival-intro-quote').textContent = `“${rival.introLine}”`;
   renderRoadmap('rival-intro-roadmap');
   Sound.playMusic(rival.finalBoss ? 'pirulas' : 'mesas');
+
+  // Guarda una foto de la run para poder reanudarla (solo Arcade/Freezeout).
+  saveRunSnapshot(gameState);
 }
 
 document.getElementById('rival-intro-button').addEventListener('click', () => {
@@ -492,6 +569,9 @@ function renderBattle() {
     foldButton.textContent = 'FOLD';
     freefoldHint.textContent = '';
   }
+
+  // Punto de reanudación: mano nueva repartida y sin acción todavía.
+  saveRunSnapshot(gameState);
 }
 
 document.getElementById('battle-odds-label').addEventListener('click', () => {
@@ -756,6 +836,10 @@ function renderBustOut() {
   document.getElementById('bustout-total').textContent = formatEuros(gameState.totalPrize);
   Sound.playMusic('derrota');
   renderRecordsWidget(document.getElementById('records-bustout'), gameState.mode);
+
+  // La run ha terminado (has busteado): registra la derrota y borra el guardado.
+  recordGameResult(statsModeFor(gameState), false, gameState.totalPrize);
+  clearRunSnapshot();
 }
 
 document.getElementById('retry-button').addEventListener('click', () => {
@@ -766,10 +850,20 @@ document.getElementById('retry-button').addEventListener('click', () => {
 
 // --- Pantalla: Final ---
 
+// Categoría de estadística para el estado actual (arcade/freezeout/daily).
+function statsModeFor(state) {
+  if (state.daily) return 'daily';
+  return state.mode === 'FREEZEOUT' ? 'freezeout' : 'arcade';
+}
+
 async function renderFinal() {
   setPortraitElement(document.getElementById('final-portrait'), { image: 'assets/champion.jpg', name: 'Campeón', suit: 'champion', suitSymbol: '👑' });
   document.getElementById('final-total').textContent = formatEuros(gameState.totalPrize);
   Sound.playMusic('champion');
+
+  // Run completada (has ganado): registra la victoria y borra el guardado.
+  recordGameResult(statsModeFor(gameState), true, gameState.totalPrize);
+  clearRunSnapshot();
 
   renderDailyResult();
 
